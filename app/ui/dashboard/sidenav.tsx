@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import NavLinks from '@/app/ui/dashboard/nav-links';
 import AcmeLogo from '@/app/ui/acme-logo';
 import { PowerIcon, MapIcon, PlusIcon, Bars3Icon } from '@heroicons/react/24/outline';
+import AddTrip from '../components/trips/AddTrip';
 
 type SideNavProps = {
   isOpen: boolean;
@@ -43,14 +43,7 @@ export default function SideNav({
             <p className="block text-lg">Recent Trips</p>
           </span>
         <NavLinks />
-        <a
-            key="Add a Trip"
-            href="#"
-            className="flex h-[48px] items-center gap-2 rounded-md text-sm font-medium hover:bg-sky-100 hover:text-blue-600 flex-none justify-start p-2 px-3"
-          >
-            <PlusIcon className="w-4" />
-            <p className="text-md">Add A Trip</p>
-          </a>
+        <AddTrip />
         <div className="h-auto w-full grow rounded-md block"></div>
         <form>
           <button className="flex h-[48px] w-full grow items-center gap-2 rounded-md text-sm font-medium hover:bg-sky-100 hover:text-blue-600 flex-none justify-start p-2 px-3">

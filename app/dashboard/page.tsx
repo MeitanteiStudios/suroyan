@@ -2,6 +2,8 @@
 
 import { PencilSquareIcon, PlusIcon } from '@heroicons/react/24/outline';
 import DayColumn, { Day } from '@/app/ui/components/trips/DayColumn';
+import AddPlace from '../ui/components/trips/AddPlace';
+import EditTrip from '../ui/components/trips/EditTrip';
 
 export default function Page() {
     const dates: Day[] = [
@@ -233,23 +235,8 @@ export default function Page() {
         <div className="w-full h-full flex flex-col gap-4">
             {/* Trip Header */}
             <div className="flex justify-between">
-                <button
-                    className="flex items-center gap-2 hover:mb-1"
-                    title="Edit Trip"
-                >
-                    <h1 className="text-2xl font-semibold">
-                        Japan Trip
-                    </h1>
-
-                    <PencilSquareIcon className="h-5 w-5" />
-                </button>
-
-                <button
-                    className="rounded-full h-9 w-9 flex items-center justify-center bg-sky-200 hover:bg-sky-300"
-                    title="Add a Place to Visit"
-                >
-                    <PlusIcon className="h-6 w-6" />
-                </button>
+                <EditTrip />
+                <AddPlace />
             </div>
 
             {/* Trip Content */}

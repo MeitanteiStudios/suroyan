@@ -19,7 +19,7 @@ export default function DayColumn({
 }: DayColumnProps) {
     return (
         <div
-            className="w-full md:w-[var(--col-width)] shrink-0 h-full"
+            className="w-[var(--col-width)] shrink-0 h-full"
             style={
                 {
                     '--col-width': width,
