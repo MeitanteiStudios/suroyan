@@ -229,7 +229,7 @@ export default function Page() {
         { length: dayCount },
         (_, i) => `Day ${i + 1}`
     );
-    const columnWidth = (100 / dayCount).toFixed(2);
+    const columnWidth: number = Number((100 / dayCount).toFixed(2));
 
     return (
         <div className="w-full h-full flex flex-col gap-4">
@@ -248,9 +248,8 @@ export default function Page() {
                         <div className="flex gap-2 mb-2">
                             {accommodations.map((accommodation, index) => {
                                 let width;
-                                let marginLeft = 0;
-                                let dateLength = accommodation.end - accommodation.start;
-                                console.log('Accommodation:', accommodation, 'index:', index);
+                                let marginLeft: number|string  = 0;
+                                let dateLength: number  = accommodation.end - accommodation.start;
 
                                 if (dayCount > threshold) {
                                     width = `${(dateLength) * 208}px`;
