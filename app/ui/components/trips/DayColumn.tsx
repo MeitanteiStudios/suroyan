@@ -29,10 +29,11 @@ export default function DayColumn({
 
             {/* Places */}
             <div className="mt-2 flex flex-col gap-2 h-full">
-                {day.places.map((place) => (
+                {day.places.map((place, index) => (
                     <PlaceCard
                         key={place.id}
                         place={place}
+                        index={index}
                     />
                 ))}
             </div>

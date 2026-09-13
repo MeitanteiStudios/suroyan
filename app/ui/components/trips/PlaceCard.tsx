@@ -11,11 +11,13 @@ export type Place = {
 
 type PlaceCardProps = {
     place: Place;
+    index: number;
 };
 
-export default function PlaceCard({ place }: PlaceCardProps) {
+export default function PlaceCard({ place, index }: PlaceCardProps) {
     const { ref, handleRef, isDragging } = useSortable({
         id: place.id,
+        index,
     });
 
     return (
