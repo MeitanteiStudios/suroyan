@@ -11,6 +11,7 @@ export default function AddPlace() {
     return (
         <div>
             <button
+                type='button'
                 className="rounded-full h-9 w-9 flex items-center justify-center bg-sky-200 hover:bg-sky-300"
                 title="Add a Place to Visit"
                 onClick={() => setIsModalOpen(true)}

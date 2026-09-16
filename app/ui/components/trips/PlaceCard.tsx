@@ -14,7 +14,6 @@ type PlaceCardProps = {
     index: number;
 };
 
-// Some change
 export default function PlaceCard({ place, index }: PlaceCardProps) {
     const { ref, handleRef, isDragging } = useSortable({
         id: place.id,

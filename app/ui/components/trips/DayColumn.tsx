@@ -1,25 +1,36 @@
 'use client';
 
 import PlaceCard, { Place } from './PlaceCard';
+import { useDroppable } from '@dnd-kit/react';
+import { DragDropProvider } from '@dnd-kit/react';
 
 export type Day = {
-    id: number;
+    id: string | number;
     name: string;
-    places: Place[];
+    date: string;
+    places: any[];
 };
 
 type DayColumnProps = {
     day: Day;
     width: string;
+    index: number;
 };
 
 export default function DayColumn({
     day,
     width,
+    index,
 }: DayColumnProps) {
+    const { ref } = useDroppable({
+        id: 'day_' + index
+    });
+
     return (
         <div
-            className="w-[var(--col-width)] shrink-0 h-full"
+            ref={ref}
+            id={'day_' + index.toString()}
+            className="w-[var(--col-width)] mt-2 flex flex-col gap-2 shrink-0 min-h-[500px]"
             style={
                 {
                     '--col-width': width,
@@ -28,15 +39,13 @@ export default function DayColumn({
         >
 
             {/* Places */}
-            <div className="mt-2 flex flex-col gap-2 h-full">
-                {day.places.map((place, index) => (
-                    <PlaceCard
-                        key={place.id}
-                        place={place}
-                        index={index}
-                    />
-                ))}
-            </div>
+            {day.places.map((place, index) => (
+                <PlaceCard
+                    key={place.id}
+                    place={place}
+                    index={index}
+                />
+            ))}
         </div>
     );
 }

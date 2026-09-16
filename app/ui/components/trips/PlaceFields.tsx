@@ -22,7 +22,7 @@ export default function PlaceFields() {
         setPlaces((current) => [
             ...current,
             {
-                id: Date.now(),
+                id: current.length,
                 address: '',
                 name: '',
             },
