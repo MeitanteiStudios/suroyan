@@ -131,23 +131,41 @@ export async function getTrip(tripId: string) {
     }
 
     const dates = getDatesBetween(trip.start_date, trip.end_date);
-    const placesPerDay = await Promise.all(
-        dates.map(async (date, index) => {
-            const id = tripId;
-            const places = await getPlaces(tripId, index);
-            const formattedDate = new Date(date).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-            });
 
-            return {
-                id,
-                name: `Day ${index + 1} - ${formattedDate}`,
-                date, 
-                places
-            }
-        })
+    // Days only contain day information
+    const days = dates.map((date, index) => {
+        const formattedDate = new Date(date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        });
+
+        return {
+            id: `day-${index + 1}`,
+            name: `Day ${index + 1} - ${formattedDate}`,
+            date,
+        };
+    });
+
+    // Places are kept as a separate array.
+    // places[0] = places for Day 1
+    // places[1] = places for Day 2
+    // etc.
+    const places = await Promise.all(
+        dates.map((_, index) => getPlaces(tripId, index))
+    );
+
+    const placeIds = Object.fromEntries(
+        places.map((dayPlaces, index) => [
+            String(index),
+            dayPlaces.map((place) => place.id),
+        ])
+    );
+
+    const placeMap = Object.fromEntries(
+        places
+            .flat()
+            .map((place) => [place.id, place])
     );
 
     const { data: accommodations, error: accommodationError } =
@@ -161,34 +179,48 @@ export async function getTrip(tripId: string) {
         throw new Error(accommodationError.message);
     }
 
-    const accomodationWithIndex = accommodations?.map((accommodation, index) => ({
-        ...accommodation,
-        accomodation_id: index + 1,
-    }));
+    const accomodationWithIndex = accommodations.map(
+        (accommodation, index) => ({
+            ...accommodation,
+            accomodation_id: index + 1,
+        })
+    );
 
     const getDayNumber = (date: string, tripStartDate: string) => {
         const start = new Date(tripStartDate);
         const current = new Date(date);
 
-        return Math.floor(
-            (current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-        ) + 1;
+        return (
+            Math.floor(
+                (current.getTime() - start.getTime()) /
+                    (1000 * 60 * 60 * 24)
+            ) + 1
+        );
     };
 
     const formattedAccommodations = accommodations.map((accommodation) => ({
         name: accommodation.name,
-        start: getDayNumber(accommodation.check_in, trip.start_date),
-        end: getDayNumber(accommodation.check_out, trip.start_date),
+        start: getDayNumber(
+            accommodation.check_in,
+            trip.start_date
+        ),
+        end: getDayNumber(
+            accommodation.check_out,
+            trip.start_date
+        ),
     }));
 
     return {
         name: trip.name,
-        trip: trip,
+        trip,
+        days,
+        placeIds,
+        placeMap,
         formattedAccommodations,
-        placesPerDay,
         accommodations: accomodationWithIndex,
     };
 }
+
 
 export async function getPlaces(tripId: string, day?: number) {
     const supabase = await createClient();
@@ -202,7 +234,7 @@ export async function getPlaces(tripId: string, day?: number) {
         query = query.eq('day', day);
     }
 
-    const { data: places, error: placesError } = await query
+    let { data: places, error: placesError } = await query
         .order('sort_order', { ascending: true });
 
     if (placesError) {
@@ -211,6 +243,7 @@ export async function getPlaces(tripId: string, day?: number) {
 
     return places;
 }
+
 
 function getDatesBetween(startDate: string, endDate: string) {
     const dates: string[] = [];

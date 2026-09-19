@@ -7,6 +7,9 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getTrip } from '@/lib/supabase/trips/actions';
 import { DragDropProvider } from '@dnd-kit/react';
+import PlaceCard, { Place } from '../ui/components/trips/PlaceCard';
+import {move} from '@dnd-kit/helpers';
+import { Item } from '../ui/Item';
 
 export type Accomodation = {
     name: string;
@@ -14,11 +17,16 @@ export type Accomodation = {
     end: number;
 };
 
+type PlaceId = string | number;
+type PlaceIds = Record<string, PlaceId[]>;
+
 export default function Page() {
     const searchParams = useSearchParams();
     const tripId = searchParams.get('id') || '';
-    const [dates, setDates] = useState<Day[]>([]);
-    const [name, setName] = useState('');
+
+    const [days, setDays] = useState<Day[]>([]);
+    const [places, setPlaces] = useState<Place[][]>([]);
+    const [placeIds, setPlaceIds] = useState<PlaceIds>({});
     const [trip, setTrip] = useState(null);
     const [accomodations, setAccomodations] = useState<Accomodation[]>([]);
     const [accoms, setAccoms] = useState<any[]>([]);
@@ -35,12 +43,12 @@ export default function Page() {
 
             try {
                 const result = await getTrip(tripId);
-                console.log(result);
-                setName(result.name);
                 setTrip(result.trip);
-                setDates(result.placesPerDay);
+                setDays(result.days);
+                setPlaces(result.placeMap);
                 setAccomodations(result.formattedAccommodations);
                 setAccoms(result.accommodations);
+                setPlaceIds(result.placeIds);
             } catch (error) {
                 console.error('Failed to load trip: ', error);
             } finally {
@@ -50,227 +58,15 @@ export default function Page() {
 
         loadTrip();
     }, [tripId]);
-//     const dates: Day[] = [
-//     {
-//         id: 1,
-//         name: 'Day 1 - Arrival & Tokyo',
-//         places: [
-//             {
-//                 id: 1,
-//                 name: 'Tokyo Tower',
-//                 url: 'https://example.com/tokyo-tower',
-//                 distance: '1.2 km',
-//             },
-//             {
-//                 id: 2,
-//                 name: 'Shibuya Crossing',
-//                 url: 'https://example.com/shibuya-crossing',
-//                 distance: '2.4 km',
-//             },
-//             {
-//                 id: 3,
-//                 name: 'Meiji Shrine',
-//                 url: 'https://example.com/meiji-shrine',
-//                 distance: '1.8 km',
-//             },
-//             {
-//                 id: 4,
-//                 name: 'Harajuku Takeshita Street',
-//                 distance: '0.7 km',
-//             },
-//         ],
-//     },
-//     {
-//         id: 2,
-//         name: 'Day 2 - Asakusa',
-//         places: [
-//             {
-//                 id: 5,
-//                 name: 'Senso-ji Temple',
-//                 url: 'https://example.com/sensoji',
-//                 distance: '1.1 km',
-//             },
-//             {
-//                 id: 6,
-//                 name: 'Nakamise Shopping Street',
-//                 distance: '0.2 km',
-//             },
-//             {
-//                 id: 7,
-//                 name: 'Tokyo Skytree',
-//                 url: 'https://example.com/skytree',
-//                 distance: '2.0 km',
-//             },
-//             {
-//                 id: 8,
-//                 name: 'Sumida Park',
-//                 distance: '0.5 km',
-//             },
-//         ],
-//     },
-//     {
-//         id: 3,
-//         name: 'Day 3 - Shinjuku',
-//         places: [
-//             {
-//                 id: 9,
-//                 name: 'Shinjuku Gyoen National Garden',
-//                 distance: '1.3 km',
-//             },
-//             {
-//                 id: 10,
-//                 name: 'Tokyo Metropolitan Government Building',
-//                 distance: '1.7 km',
-//             },
-//             {
-//                 id: 11,
-//                 name: 'Omoide Yokocho',
-//                 distance: '0.8 km',
-//             },
-//             {
-//                 id: 12,
-//                 name: 'Kabukicho',
-//                 distance: '0.6 km',
-//             },
-//             {
-//                 id: 13,
-//                 name: 'Godzilla Head',
-//                 distance: '0.3 km',
-//             },
-//         ],
-//     },
-//     {
-//         id: 4,
-//         name: 'Day 4 - Odaiba',
-//         places: [
-//             {
-//                 id: 14,
-//                 name: 'teamLab Borderless',
-//                 url: 'https://example.com/teamlab',
-//                 distance: '1.5 km',
-//             },
-//             {
-//                 id: 15,
-//                 name: 'DiverCity Tokyo Plaza',
-//                 distance: '0.9 km',
-//             },
-//             {
-//                 id: 16,
-//                 name: 'Gundam Statue',
-//                 distance: '0.1 km',
-//             },
-//             {
-//                 id: 17,
-//                 name: 'Odaiba Seaside Park',
-//                 distance: '1.2 km',
-//             },
-//         ],
-//     },
-//     {
-//         id: 5,
-//         name: 'Day 5 - Ueno',
-//         places: [
-//             {
-//                 id: 18,
-//                 name: 'Ueno Park',
-//                 distance: '0.5 km',
-//             },
-//             {
-//                 id: 19,
-//                 name: 'Tokyo National Museum',
-//                 distance: '0.8 km',
-//             },
-//             {
-//                 id: 20,
-//                 name: 'Ameya-Yokocho',
-//                 distance: '0.4 km',
-//             },
-//             {
-//                 id: 21,
-//                 name: 'Ueno Zoo',
-//                 distance: '0.7 km',
-//             },
-//         ],
-//     },
-//     {
-//         id: 6,
-//         name: 'Day 6 - Ginza',
-//         places: [
-//             {
-//                 id: 22,
-//                 name: 'Tsukiji Outer Market',
-//                 distance: '1.1 km',
-//             },
-//             {
-//                 id: 23,
-//                 name: 'Ginza Six',
-//                 distance: '0.9 km',
-//             },
-//             {
-//                 id: 24,
-//                 name: 'Kabuki-za Theatre',
-//                 distance: '0.4 km',
-//             },
-//             {
-//                 id: 25,
-//                 name: 'Tokyo Station',
-//                 distance: '1.3 km',
-//             },
-//         ],
-//     },
-//     {
-//         id: 7,
-//         name: 'Day 7 - Final Day',
-//         places: [
-//             {
-//                 id: 26,
-//                 name: 'Imperial Palace',
-//                 distance: '1.2 km',
-//             },
-//             {
-//                 id: 27,
-//                 name: 'Tokyo Station',
-//                 distance: '1.5 km',
-//             },
-//             {
-//                 id: 28,
-//                 name: 'Akihabara',
-//                 distance: '2.0 km',
-//             },
-//             {
-//                 id: 29,
-//                 name: 'Don Quijote Akihabara',
-//                 distance: '0.3 km',
-//             },
-//             {
-//                 id: 30,
-//                 name: 'Haneda Airport',
-//                 distance: '18.5 km',
-//             },
-//         ],
-//     },
-// ];
-    const dayCount = dates.length;
+
+    const dayCount = days.length;
 
     const threshold = 10;
-    // const accomodations = [
-    //     {
-    //         name: 'Hotel A',
-    //         start: 1,
-    //         end: 3,
-    //     },
-    //     {
-    //         name: 'Hotel B',
-    //         start: 3,
-    //         end: 5,
-    //     },
-    //     {
-    //         name: 'Hotel C',
-    //         start: 5,
-    //         end: 6,
-    //     },
-    // ];
     const columnWidth: number = Number((100 / dayCount).toFixed(2));
+    const width =
+        dayCount > threshold
+            ? '13rem'
+            : `${columnWidth}%`;
 
     return (
         <div className="w-full h-full flex flex-col gap-4">
@@ -328,7 +124,7 @@ export default function Page() {
                     {/* Day Header */}
                     <div className="sticky top-[68px] z-20 bg-sky-100 py-1">
                         <div className="flex gap-2 mb-2">
-                            {dates.map((day, index) => {
+                            {days.map((day, index) => {
                                 const isWide = dayCount > threshold;
 
                                 return (
@@ -349,23 +145,29 @@ export default function Page() {
                     </div>
 
                     {/* Day Row */}
-                    <DragDropProvider>
+                    <DragDropProvider
+                        onDragOver={(event) => {
+                            setPlaceIds((placeIds) => move(placeIds, event));
+                            console.log(placeIds);
+                        }}
+                    >
                         <div className="flex gap-2">
-                            {dates.map((day, index) => {
-                                const width =
-                                    dayCount > threshold
-                                        ? '13rem'
-                                        : `${columnWidth}%`;
-
-                                return (
-                                    <DayColumn
-                                        key={'daycol_' + index}
-                                        day={day}
-                                        width={width}
-                                        index={index}
-                                    />
-                                );
-                            })}
+                            {Object.entries(placeIds).map(([column, ids]) => (
+                                <DayColumn
+                                    key={column}
+                                    width={width}
+                                    id={column}
+                                >
+                                    {ids.map((id, index) => (
+                                        <PlaceCard
+                                            key={id}
+                                            place={places[id]}
+                                            index={index}
+                                            column={column}
+                                        />
+                                    ))}
+                                </DayColumn>
+                            ))}
                         </div>
                     </DragDropProvider>
                 </div>

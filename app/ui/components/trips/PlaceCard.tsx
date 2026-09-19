@@ -7,29 +7,40 @@ export type Place = {
     name: string;
     url?: string;
     distance?: string;
+    disabled?: boolean;
 };
 
 type PlaceCardProps = {
     place: Place;
     index: number;
+    column: any;
 };
 
-export default function PlaceCard({ place, index }: PlaceCardProps) {
+export default function PlaceCard({
+    place,
+    index,
+    column,
+}: PlaceCardProps) {
     const { ref, handleRef, isDragging } = useSortable({
         id: place.id,
         index,
+        disabled: place.disabled ? { draggable: true } : false,
+        type: 'item',
+        accept: 'item',
+        group: column,
     });
 
     return (
         <div
             ref={ref}
+            data-dragging={isDragging}
             className={`w-full rounded-md bg-sky-200 p-4 transition-opacity ${
                 isDragging ? 'opacity-50' : ''
-            }`}
+            } ${place.disabled ? 'opacity-60' : ''}`}
         >
             <div
-                ref={handleRef}
-                className="cursor-move"
+                ref={place.disabled ? undefined : handleRef}
+                className={place.disabled ? 'cursor-default' : 'cursor-move'}
             >
                 <h3 className="text-lg font-semibold">
                     {place.name}
