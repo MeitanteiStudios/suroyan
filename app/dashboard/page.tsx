@@ -8,8 +8,7 @@ import { useEffect, useState } from 'react';
 import { getTrip } from '@/lib/supabase/trips/actions';
 import { DragDropProvider } from '@dnd-kit/react';
 import PlaceCard, { Place } from '../ui/components/trips/PlaceCard';
-import {move} from '@dnd-kit/helpers';
-import { Item } from '../ui/Item';
+import { move } from '@dnd-kit/helpers';
 
 export type Accomodation = {
     name: string;
@@ -74,14 +73,16 @@ export default function Page() {
             {trip && (
                 <div className="flex justify-between">
                     <EditTrip trip={trip} accomodations={accoms} />
-                    <AddPlace />
+                    <AddPlace tripId={trip?.id} />
                 </div>
             )}
 
             {/* Trip Content */}
             <div className="w-full bg-sky-100 grow rounded-md p-4 pt-0 overflow-auto">
+                {loading && <div className="w-full h-full flex items-center justify-center">
+                    <h3 className="text-lg font-medium">Fetching your trip...</h3>
+                </div>}
                 <div className="min-w-max">
-                    
                     {/* Accommodations */}
                     <div className="sticky top-0 z-30 bg-sky-100 py-1 pt-4">
                         <div className="flex gap-2 mb-2">

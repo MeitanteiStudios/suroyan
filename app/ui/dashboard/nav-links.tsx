@@ -1,29 +1,27 @@
 import { getTrips } from "@/lib/supabase/trips/actions";
 import { useEffect, useState } from "react";
-
-// Fetch here the trips of the user
-const links = [
-  {
-    name: 'Japan Trip',
-    href: '/dashboard/invoices',
-  },
-  { 
-    name: 'Disney Cruise', 
-    href: '/dashboard/customers' 
-  },
-];
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function NavLinks() {
   const [trips, setTrips] = useState<any[]>([]);
+  const searchParams = useSearchParams();
+  const tripId = searchParams.get('id') || '';
+
+  const router = useRouter();
   
   useEffect(() => {
     const loadTrips = async () => {
       const data = await getTrips();
       setTrips(data);
+
+      if (tripId.length == 0 && data.length > 0) {
+        router.push(`/dashboard?id=${data[0].id}`);
+      }
     }
 
     loadTrips();
-  }, []);
+  }, [tripId]);
 
   return (
     <>

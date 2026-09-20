@@ -1,5 +1,5 @@
 'use client';
-;
+
 import { useDroppable } from '@dnd-kit/react';
 
 export type Day = {
@@ -28,7 +28,7 @@ export default function DayColumn({
     return (
         <div
             ref={ref}
-            className="w-[var(--col-width)] mt-2 flex flex-col gap-2 shrink-0 min-h-[500px] bg-pink-50"
+            className="w-[var(--col-width)] mt-2 flex flex-col gap-2 shrink-0 min-h-[500px]"
             style={
                 {
                     '--col-width': width,

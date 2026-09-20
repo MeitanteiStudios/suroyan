@@ -6,6 +6,7 @@ export type TripFieldsProps = {
 export default function TripFields({ trip }: TripFieldsProps) {
     return (
         <div className="w-full flex flex-col gap-4">
+            <input type="hidden" name="trip_id" defaultValue={trip?.id ?? ''} />
             <div>
                 <label htmlFor="tripName" className="block font-medium text-gray-700">
                     Trip Name

@@ -24,25 +24,31 @@ export default function AddTrip() {
         e.preventDefault();
 
         const formData = new FormData(e.currentTarget);
+
         startTransition(async () => {
             const response = await createTrip(formData);
+
             setResult(response);
 
-            if (result.success) {
+            if (response.success) {
                 // close modal
                 setIsModalOpen(false);
 
-                // refresh server-rendered data
-                router.refresh();   
+                // show notification
+                setNotification(response.message);
+
+                // redirect after 3 seconds
+                setTimeout(() => {
+                    setNotification('');
+                    router.push(`/dashboard?id=${response.tripId}`);
+                }, 3000);
+            } else {
+                setNotification(response.message);
+
+                setTimeout(() => {
+                    setNotification('');
+                }, 3000);
             }
-
-            // show notification
-            setNotification(result.message);
-
-            // hide notification after 3 seconds
-            setTimeout(() => {
-                setNotification('');
-            }, 3000);
         });
     };
 
@@ -61,22 +67,48 @@ export default function AddTrip() {
                 <p className="text-md">Add A Trip</p>
             </a>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} width="max-w-7xl" title="Add a New Trip">
-                <form onSubmit={handleSubmit} id='addTripForm'>
-                    <div className="flex gap-8 mt-8">
-                        <div className="w-1/2 flex flex-col gap-4">
-                            <TripFields trip={null} />
-                            <AccomodationFields accoms={null} />
-                        </div>
-                        <div className='w-1/2'>
-                            <PlaceFields />
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                width="max-w-7xl"
+                title="Add a New Trip"
+            >
+                <form
+                    onSubmit={handleSubmit}
+                    id="addTripForm"
+                    className="flex min-h-0 flex-1 flex-col"
+                >
+                    {/* Scrollable content */}
+                    <div className="min-h-0 flex-1 overflow-auto">
+                        <div className="flex gap-8 mt-8">
+                            <div className="w-1/2 flex flex-col gap-4">
+                                <TripFields trip={null} />
+                                <AccomodationFields accoms={null} />
+                            </div>
+
+                            <div className="w-1/2">
+                                <PlaceFields />
+                            </div>
                         </div>
                     </div>
-                    <div className="flex items-center justify-center gap-4 mt-16">
-                        <button type="submit" disabled={isPending} className="bg-sky-500 hover:bg-sky-400 cursor-pointer text-white font-medium px-6 py-2 rounded">
-                            { isPending ? 'Saving...' : 'Save' }
+
+                    {/* Fixed/sticky buttons */}
+                    <div className="sticky bottom-0 flex shrink-0 items-center justify-center gap-4 bg-white py-4">
+                        <button
+                            type="submit"
+                            disabled={isPending}
+                            className="bg-sky-500 hover:bg-sky-400 cursor-pointer text-white font-medium px-6 py-2 rounded"
+                        >
+                            {isPending ? 'Saving...' : 'Save'}
                         </button>
-                        <button type="button" onClick={() => setIsModalOpen(false)} className="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-sky-500 font-medium px-4 py-2 rounded">Cancel</button>
+
+                        <button
+                            type="button"
+                            onClick={() => setIsModalOpen(false)}
+                            className="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-sky-500 font-medium px-4 py-2 rounded"
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </form>
             </Modal>

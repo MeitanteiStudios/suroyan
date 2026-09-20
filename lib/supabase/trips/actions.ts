@@ -39,8 +39,14 @@ export async function createTrip(formData: FormData) {
         }
 
         for (let i = 0; ; i++) {
-            let address = data[`accomodation[${i}][address]`];
-            if (address) {
+            const accommodationAddress = data[`accomodation[${i}][address]`];
+            const placeAddress = data[`place[${i}][address]`];
+
+            if (!accommodationAddress && !placeAddress) {
+                break;
+            }
+
+            if (accommodationAddress) {
                 const checkIn = data[`accomodation[${i}][check_in]`];
                 const checkOut = data[`accomodation[${i}][check_out]`];
 
@@ -48,8 +54,8 @@ export async function createTrip(formData: FormData) {
                     .from('accommodations')
                     .insert({
                         trip_id: trip.id,
-                        name: address,
-                        address: address,
+                        name: accommodationAddress,
+                        address: accommodationAddress,
                         check_in: checkIn,
                         check_out: checkOut,
                     });
@@ -59,8 +65,7 @@ export async function createTrip(formData: FormData) {
                 }
             }
 
-            address = data[`place[${i}][address]`];
-            if (address) {
+            if (placeAddress) {
                 const name = data[`place[${i}][name]`];
 
                 let { error } = await supabase
@@ -68,7 +73,7 @@ export async function createTrip(formData: FormData) {
                     .insert({
                         trip_id: trip.id,
                         name: name,
-                        address: address,
+                        address: placeAddress,
                     });
 
                 if (error) {
@@ -88,6 +93,161 @@ export async function createTrip(formData: FormData) {
             message: error instanceof Error
                 ? error.message
                 : 'Something went wrong.',
+        };
+    }
+}
+
+export async function updateTrip(formData: FormData) {
+    const supabase = await createClient();
+
+    try {
+        const data = Object.fromEntries(formData);
+
+        const tripId = data['trip_id'] as string;
+
+        if (!tripId) {
+            throw new Error('Trip ID is required.');
+        }
+
+        /*
+         * 1. Update Trip
+         */
+        const { data: trip, error: tripError } = await supabase
+            .from('trips')
+            .update({
+                name: data['trip_name'],
+                start_date: data['start_date'],
+                start_time: data['start_time'] || null,
+                end_date: data['end_date'],
+                end_time: data['end_time'] || null,
+            })
+            .eq('id', tripId)
+            .select()
+            .single();
+
+        if (tripError) {
+            throw new Error(tripError.message);
+        }
+
+        /*
+         * 2. Get existing accommodations
+         */
+        const { data: existingAccomodations, error: existingError } =
+            await supabase
+                .from('accommodations')
+                .select('id')
+                .eq('trip_id', tripId);
+
+        if (existingError) {
+            throw new Error(existingError.message);
+        }
+
+        /*
+         * 3. Get accommodations submitted by the form
+         */
+        const submittedAccomodationIds: string[] = [];
+
+        for (let i = 0; ; i++) {
+            const accomodationId =
+                data[`accomodation[${i}][accomodation_id]`];
+
+            const address =
+                data[`accomodation[${i}][address]`];
+
+            const checkIn =
+                data[`accomodation[${i}][check_in]`];
+
+            const checkOut =
+                data[`accomodation[${i}][check_out]`];
+
+            // No more accommodation fields
+            if (
+                accomodationId === undefined &&
+                address === undefined
+            ) {
+                break;
+            }
+
+            /*
+             * Existing accommodation
+             */
+            if (accomodationId) {
+                submittedAccomodationIds.push(
+                    accomodationId as string
+                );
+
+                const { error } = await supabase
+                    .from('accommodations')
+                    .update({
+                        address: address || null,
+                        name: address || null,
+                        check_in: checkIn || null,
+                        check_out: checkOut || null,
+                    })
+                    .eq('id', accomodationId)
+                    .eq('trip_id', tripId);
+
+                if (error) {
+                    throw new Error(error.message);
+                }
+            }
+
+            /*
+             * New accommodation
+             */
+            else if (address) {
+                const { error } = await supabase
+                    .from('accommodations')
+                    .insert({
+                        trip_id: tripId,
+                        name: address,
+                        address: address,
+                        check_in: checkIn || null,
+                        check_out: checkOut || null,
+                    });
+
+                if (error) {
+                    throw new Error(error.message);
+                }
+            }
+        }
+
+        /*
+         * 4. Delete accommodations that were removed
+         */
+        const existingIds =
+            existingAccomodations?.map(
+                (accomodation) => accomodation.id
+            ) ?? [];
+
+        const idsToDelete = existingIds.filter(
+            (id) => !submittedAccomodationIds.includes(id)
+        );
+
+        if (idsToDelete.length > 0) {
+            const { error } = await supabase
+                .from('accommodations')
+                .delete()
+                .in('id', idsToDelete)
+                .eq('trip_id', tripId);
+
+            if (error) {
+                throw new Error(error.message);
+            }
+        }
+
+        return {
+            success: true,
+            message: 'Trip updated successfully!',
+            trip,
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message:
+                error instanceof Error
+                    ? error.message
+                    : 'Something went wrong.',
         };
     }
 }
@@ -244,6 +404,86 @@ export async function getPlaces(tripId: string, day?: number) {
     return places;
 }
 
+export async function addPlaces(formData: FormData) {
+    const supabase = await createClient();
+
+    try {
+        const data = Object.fromEntries(formData);
+
+        const tripId = data['trip_id'] as string;
+
+        if (!tripId) {
+            throw new Error('Trip ID is required.');
+        }
+
+        const places = [];
+
+        for (let i = 0; ; i++) {
+            const name = data[`place[${i}][name]`];
+            const address = data[`place[${i}][address]`];
+
+            if (name === undefined && address === undefined) {
+                break;
+            }
+
+            if (!name && !address) {
+                continue;
+            }
+
+            places.push({
+                trip_id: tripId,
+                name: name || '',
+                address: address || null,
+                google_place_id:
+                    data[`place[${i}][google_place_id]`] || null,
+                latitude:
+                    data[`place[${i}][latitude]`]
+                        ? Number(data[`place[${i}][latitude]`])
+                        : null,
+                longitude:
+                    data[`place[${i}][longitude]`]
+                        ? Number(data[`place[${i}][longitude]`])
+                        : null,
+                category:
+                    data[`place[${i}][category]`] || null,
+
+                // New places can initially be assigned
+                // to Day 1.
+                day: 0,
+
+                // Put them after existing places.
+                sort_order: i,
+            });
+        }
+
+        if (places.length === 0) {
+            throw new Error('No places were provided.');
+        }
+
+        const { data: insertedPlaces, error } = await supabase
+            .from('trip_places')
+            .insert(places)
+            .select();
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        return {
+            success: true,
+            message: 'Places added successfully!',
+            places: insertedPlaces,
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message:
+                error instanceof Error
+                    ? error.message
+                    : 'Something went wrong.',
+        };
+    }
+}
 
 function getDatesBetween(startDate: string, endDate: string) {
     const dates: string[] = [];
