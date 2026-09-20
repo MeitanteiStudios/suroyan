@@ -1,9 +1,10 @@
 'use client';
 
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { PlusIcon } from '@heroicons/react/24/outline';
+import { useState } from 'react';
+import PlaceInput from './PlaceInput';
 
-type Place = {
+export type Place = {
     id: number;
     address: string;
     name: string;
@@ -58,38 +59,12 @@ export default function PlaceFields() {
             </div>
 
             {places.map((place, index) => (
-                <div
+                <PlaceInput
                     key={place.id}
-                    className="flex gap-2 items-center"
-                >
-                    <div className="w-1/2">
-                        <input
-                            type="text"
-                            name={`place[${index}][address]`}
-                            id={`placeAddress${index}`}
-                            defaultValue={place.address}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <div className="w-1/2">
-                        <input
-                            type="text"
-                            name={`place[${index}][name]`}
-                            id={`placeName${index}`}
-                            defaultValue={place.name}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <button
-                        type="button"
-                        className="flex items-center justify-center w-6 h-6 rounded-full"
-                        onClick={() => removePlace(place.id)}
-                    >
-                        <TrashIcon className="w-4 h-4 text-red-500 hover:text-red-700" />
-                    </button>
-                </div>
+                    place={place}
+                    index={index}
+                    onRemove={removePlace}
+                />
             ))}
 
             <button

@@ -35,7 +35,6 @@ export default function Page({
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-
         const loadTrip = async () => {
             const { id } = await params;
             if (!id) {

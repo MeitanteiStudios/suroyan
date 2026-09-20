@@ -67,6 +67,9 @@ export async function createTrip(formData: FormData) {
 
             if (placeAddress) {
                 const name = data[`place[${i}][name]`];
+                const latitude = data[`place[${i}][latitude]`];
+                const longtitude = data[`place[${i}][longtitude]`];
+                const placeId = data[`place[${i}][place_id]`];
 
                 let { error } = await supabase
                     .from('trip_places')
@@ -74,6 +77,9 @@ export async function createTrip(formData: FormData) {
                         trip_id: trip.id,
                         name: name,
                         address: placeAddress,
+                        latitude: latitude,
+                        longtitude: longtitude,
+                        place_id: placeId,
                     });
 
                 if (error) {
@@ -148,17 +154,13 @@ export async function updateTrip(formData: FormData) {
         const submittedAccomodationIds: string[] = [];
 
         for (let i = 0; ; i++) {
-            const accomodationId =
-                data[`accomodation[${i}][accomodation_id]`];
-
-            const address =
-                data[`accomodation[${i}][address]`];
-
-            const checkIn =
-                data[`accomodation[${i}][check_in]`];
-
-            const checkOut =
-                data[`accomodation[${i}][check_out]`];
+            const accomodationId = data[`accomodation[${i}][accomodation_id]`];
+            const address = data[`accomodation[${i}][address]`];
+            const checkIn = data[`accomodation[${i}][check_in]`];
+            const checkOut = data[`accomodation[${i}][check_out]`];
+            const latitude = data[`accomodation[${i}][latitude]`];
+            const longitude = data[`accomodation[${i}][longitude]`];
+            const placeId = data[`accomodation[${i}][place_id]`];
 
             // No more accommodation fields
             if (
@@ -183,6 +185,9 @@ export async function updateTrip(formData: FormData) {
                         name: address || null,
                         check_in: checkIn || null,
                         check_out: checkOut || null,
+                        place_id: placeId || null,
+                        latitude: latitude,
+                        longitude: longitude,
                     })
                     .eq('id', accomodationId)
                     .eq('trip_id', tripId);
@@ -204,6 +209,9 @@ export async function updateTrip(formData: FormData) {
                         address: address,
                         check_in: checkIn || null,
                         check_out: checkOut || null,
+                        place_id: placeId || null,
+                        latitude: latitude,
+                        longitude: longitude,
                     });
 
                 if (error) {
@@ -342,7 +350,7 @@ export async function getTrip(tripId: string) {
     const accomodationWithIndex = accommodations.map(
         (accommodation, index) => ({
             ...accommodation,
-            accomodation_id: index + 1,
+            accomodation_id: accommodation.id,
         })
     );
 
@@ -434,8 +442,8 @@ export async function addPlaces(formData: FormData) {
                 trip_id: tripId,
                 name: name || '',
                 address: address || null,
-                google_place_id:
-                    data[`place[${i}][google_place_id]`] || null,
+                place_id:
+                    data[`place[${i}][place_id]`] || null,
                 latitude:
                     data[`place[${i}][latitude]`]
                         ? Number(data[`place[${i}][latitude]`])
