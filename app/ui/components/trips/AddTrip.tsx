@@ -40,7 +40,7 @@ export default function AddTrip() {
                 // redirect after 3 seconds
                 setTimeout(() => {
                     setNotification('');
-                    router.push(`/dashboard?id=${response.tripId}`);
+                    router.push(`/dashboard/${response.tripId}`);
                 }, 3000);
             } else {
                 setNotification(response.message);

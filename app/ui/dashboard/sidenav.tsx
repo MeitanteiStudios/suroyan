@@ -12,7 +12,7 @@ type SideNavProps = {
 
 export default function SideNav({
   isOpen,
-  setIsOpen,
+  setIsOpen
 }: SideNavProps) {
 
   return (

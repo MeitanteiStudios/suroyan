@@ -318,7 +318,7 @@ export async function getTrip(tripId: string) {
     const placeIds = Object.fromEntries(
         places.map((dayPlaces, index) => [
             String(index),
-            dayPlaces.map((place) => place.id),
+            (dayPlaces ?? []).map((place) => place.id),
         ])
     );
 
