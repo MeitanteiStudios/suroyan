@@ -159,7 +159,7 @@ export default function PlaceInput({
             {showDropdown &&
                 createPortal(
                     <ul
-                        className="fixed z-[9999] mt-1 rounded-md border border-gray-300 bg-white p-2 shadow-lg"
+                        className="fixed z-[9999] mt-1 rounded-md border border-gray-300 bg-white p-2 shadow-lg overflow-auto max-h-80"
                         style={{
                             top: dropdownPosition.top,
                             left: dropdownPosition.left,

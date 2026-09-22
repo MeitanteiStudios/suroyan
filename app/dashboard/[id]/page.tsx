@@ -4,7 +4,7 @@ import DayColumn, { Day } from '@/app/ui/components/trips/DayColumn';
 import AddPlace from '../../ui/components/trips/AddPlace';
 import EditTrip from '../../ui/components/trips/EditTrip';
 import { useEffect, useState } from 'react';
-import { getTrip } from '@/lib/supabase/trips/actions';
+import { getTrip, savePlaces } from '@/lib/supabase/trips/actions';
 import { DragDropProvider } from '@dnd-kit/react';
 import PlaceCard, { Place } from '../../ui/components/trips/PlaceCard';
 import { move } from '@dnd-kit/helpers';
@@ -154,10 +154,14 @@ export default function Page({
                     <DragDropProvider
                         onDragOver={(event) => {
                             setPlaceIds((placeIds) => move(placeIds, event));
-                            console.log(placeIds);
+                        }}
+                        onDragEnd={(event) => {
+                            setTimeout(async () => {
+                                await savePlaces(tripId, placeIds);
+                            }, 2000);
                         }}
                     >
-                        <div className="flex gap-2">
+                        <form id="placeCardForm" className="flex gap-2">
                             {Object.entries(placeIds).map(([column, ids]) => (
                                 <DayColumn
                                     key={column}
@@ -174,7 +178,7 @@ export default function Page({
                                     ))}
                                 </DayColumn>
                             ))}
-                        </div>
+                        </form>
                     </DragDropProvider>
                 </div>
             </div>

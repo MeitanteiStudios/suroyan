@@ -493,6 +493,30 @@ export async function addPlaces(formData: FormData) {
     }
 }
 
+export async function savePlaces(
+    tripId: string,
+    placeIds: Record<string, (string | number)[]>
+) {
+    const supabase = await createClient();
+
+    for (const [column, ids] of Object.entries(placeIds)) {
+        for (const [sortOrder, id] of ids.entries()) {
+            const { error } = await supabase
+                .from('trip_places')
+                .update({
+                    day: Number(column),
+                    sort_order: sortOrder,
+                })
+                .eq('id', String(id))
+                .eq('trip_id', tripId);
+
+            if (error) {
+                throw new Error(error.message);
+            }
+        }
+    }
+}
+
 function getDatesBetween(startDate: string, endDate: string) {
     const dates: string[] = [];
 

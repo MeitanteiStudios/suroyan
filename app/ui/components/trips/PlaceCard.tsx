@@ -42,6 +42,7 @@ export default function PlaceCard({
                 ref={place.disabled ? undefined : handleRef}
                 className={place.disabled ? 'cursor-default' : 'cursor-move'}
             >
+                <input type="hidden" name="place_cards[][]" value={place.name} />
                 <h3 className="text-lg font-semibold">
                     {place.name}
                 </h3>
