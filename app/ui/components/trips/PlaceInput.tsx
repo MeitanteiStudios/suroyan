@@ -36,7 +36,7 @@ export default function PlaceInput({
         undefined
     );
 
-    const [longtitude, setLongtitude] = useState<
+    const [longitude, setLongitude] = useState<
         string | undefined
     >(undefined);
 
@@ -102,15 +102,15 @@ export default function PlaceInput({
         place.name = searchPlace.name;
 
         setLatitude(searchPlace.lat);
-        setLongtitude(searchPlace.lon);
+        setLongitude(searchPlace.lon);
         setPlaceId(searchPlace.place_id);
     };
 
     return (
         <>
-            <input type="hidden" name={`place[${index}][placeId]`} id={`placePlaceId${place.id}`} value={placeId} />
+            <input type="hidden" name={`place[${index}][place_id]`} id={`placePlaceId${place.id}`} value={placeId} />
             <input type="hidden" name={`place[${index}][latitude]`} id={`placeLatitude${place.id}`} value={latitude} />
-            <input type="hidden" name={`place[${index}][longtitude]`} id={`placeLongtitude${place.id}`} value={longtitude} />
+            <input type="hidden" name={`place[${index}][longitude]`} id={`placeLongitude${place.id}`} value={longitude} />
             <div className="flex items-center gap-2">
                 <div className="w-1/2">
                     <input

@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { optimizeTrip } from '../maps/actions';
 
 const user_id = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -68,7 +69,7 @@ export async function createTrip(formData: FormData) {
             if (placeAddress) {
                 const name = data[`place[${i}][name]`];
                 const latitude = data[`place[${i}][latitude]`];
-                const longtitude = data[`place[${i}][longtitude]`];
+                const longitude = data[`place[${i}][longitude]`];
                 const placeId = data[`place[${i}][place_id]`];
 
                 let { error } = await supabase
@@ -78,7 +79,7 @@ export async function createTrip(formData: FormData) {
                         name: name,
                         address: placeAddress,
                         latitude: latitude,
-                        longtitude: longtitude,
+                        longitude: longitude,
                         place_id: placeId,
                     });
 
@@ -354,29 +355,19 @@ export async function getTrip(tripId: string) {
         })
     );
 
-    const getDayNumber = (date: string, tripStartDate: string) => {
-        const start = new Date(tripStartDate);
-        const current = new Date(date);
-
-        return (
-            Math.floor(
-                (current.getTime() - start.getTime()) /
-                    (1000 * 60 * 60 * 24)
-            ) + 1
-        );
-    };
-
-    const formattedAccommodations = accommodations.map((accommodation) => ({
-        name: accommodation.name,
-        start: getDayNumber(
-            accommodation.check_in,
-            trip.start_date
-        ),
-        end: getDayNumber(
-            accommodation.check_out,
-            trip.start_date
-        ),
-    }));
+    const formattedAccommodations = await Promise.all(
+        accommodations.map(async (accommodation) => ({
+            name: accommodation.name,
+            start: await getDayNumber(
+                accommodation.check_in,
+                trip.start_date
+            ),
+            end: await getDayNumber(
+                accommodation.check_out,
+                trip.start_date
+            ),
+        }))
+    );
 
     return {
         name: trip.name,
@@ -389,8 +380,20 @@ export async function getTrip(tripId: string) {
     };
 }
 
+export async function getDayNumber (date: string, tripStartDate: string) {
+    const start = new Date(tripStartDate);
+    const current = new Date(date);
 
-export async function getPlaces(tripId: string, day?: number) {
+    return (
+        Math.floor(
+            (current.getTime() - start.getTime()) /
+            (1000 * 60 * 60 * 24)
+        ) + 1
+    );
+};
+
+
+export async function getPlaces(tripId: string, day?: number): Promise<any[]> {
     const supabase = await createClient();
 
     let query = supabase
@@ -409,7 +412,23 @@ export async function getPlaces(tripId: string, day?: number) {
         throw new Error(placesError.message);
     }
 
-    return places;
+    return places ?? [];
+}
+
+export async function getAccomodations(tripId: string) {
+    const supabase = await createClient();
+
+    const { data: accomodations, error: error } =
+            await supabase
+                .from('accommodations')
+                .select('*')
+                .eq('trip_id', tripId);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    return accomodations;
 }
 
 export async function addPlaces(formData: FormData) {
@@ -454,6 +473,8 @@ export async function addPlaces(formData: FormData) {
                         : null,
                 category:
                     data[`place[${i}][category]`] || null,
+                distance: 0,
+                time: 0,
 
                 // New places can initially be assigned
                 // to Day 1.
@@ -477,6 +498,8 @@ export async function addPlaces(formData: FormData) {
             throw new Error(error.message);
         }
 
+        await optimizeTrip(tripId);
+
         return {
             success: true,
             message: 'Places added successfully!',
@@ -493,21 +516,297 @@ export async function addPlaces(formData: FormData) {
     }
 }
 
+// export async function savePlaces(
+//     tripId: string,
+//     placeIds: Record<string, (string | number)[]>
+// ) {
+//     const supabase = await createClient();
+
+//     const { data: trip, error: tripError } = await supabase
+//         .from('trips')
+//         .select('*')
+//         .eq('id', tripId)
+//         .eq('user_id', user_id)
+//         .single();
+
+//     if (tripError) {
+//         throw new Error(tripError.message);
+//     }
+
+//     const places = await getPlaces(tripId);
+//     const accomodations = await getAccomodations(tripId);
+//     const locations = [
+//         ...(accomodations ?? []),
+//         ...(places ?? []),
+//     ];
+//     const coordinates = locations.map(
+//         (location) =>
+//             `${location.longitude},${location.latitude}`
+//         )
+//         .join(';');
+//     // Get the durations of ALL places and accomodations
+//     const url =
+//         `https://router.project-osrm.org/table/v1/driving/${coordinates}` +
+//         `?annotations=duration,distance`;
+//     const response = await fetch(url);
+//     const matrix = await response.json();
+//     const durationsMatrix = matrix.durations;
+//     const distancesMatrix = matrix.distances;
+
+//     for (const [column, ids] of Object.entries(placeIds)) {
+//         for (const [sortOrder, id] of ids.entries()) {
+//             let day = 0;
+//             // determine which accomodation the place belongs to
+//             let startIdx = 0;
+//             if (sortOrder == 0) {
+//                 for (startIdx = 0; startIdx < accomodations.length; startIdx++) {
+//                     day = await getDayNumber(accomodations[startIdx].check_out, trip.start_date) - 1
+//                     if (Number(column) == Number(placeIds.length) - 1 || Number(column) < day) {
+//                         break;
+//                     }
+//                 }
+//             } else {
+//                 const prevPlaceId = placeIds[column][sortOrder - 1];
+//                 for (startIdx = 0; places[startIdx].id != prevPlaceId && startIdx < Number(places?.length); startIdx++) {}
+//                 startIdx += accomodations.length;
+//             }
+
+//             let placeIdx = 0;
+//             for (placeIdx = 0; places[placeIdx].id != id && placeIdx < Number(places?.length); placeIdx++) {}
+//             placeIdx += accomodations.length;
+
+//             const { error } = await supabase
+//                 .from('trip_places')
+//                 .update({
+//                     day: Number(column),
+//                     sort_order: sortOrder,
+//                     distance: distancesMatrix[startIdx][placeIdx],
+//                     time: durationsMatrix[startIdx][placeIdx],
+//                 })
+//                 .eq('id', String(id))
+//                 .eq('trip_id', tripId);
+
+//             if (error) {
+//                 throw new Error(error.message);
+//             }
+//         }
+//     }
+
+//     const dates = getDatesBetween(trip.start_date, trip.end_date);
+//     const updatedPlaces = await Promise.all(
+//         dates.map((_, index) => getPlaces(tripId, index))
+//     );
+//     const placeMap = Object.fromEntries(
+//         updatedPlaces
+//             .flat()
+//             .map((place) => [place.id, place])
+//     );
+
+//     return {
+//         placeMap
+//     }
+// }
+
 export async function savePlaces(
     tripId: string,
     placeIds: Record<string, (string | number)[]>
 ) {
     const supabase = await createClient();
 
+    // Verify trip belongs to the current user
+    const { data: trip, error: tripError } = await supabase
+        .from('trips')
+        .select('*')
+        .eq('id', tripId)
+        .eq('user_id', user_id)
+        .single();
+
+    if (tripError) {
+        throw new Error(tripError.message);
+    }
+
+    const places = await getPlaces(tripId);
+    const accomodations = await getAccomodations(tripId);
+
+    /*
+     * OSRM matrix layout:
+     *
+     * 0                 = accommodation[0]
+     * 1                 = accommodation[1]
+     * ...
+     * accomodations.length
+     *                    = places[0]
+     * accomodations.length + 1
+     *                    = places[1]
+     * ...
+     */
+
+    const locations = [
+        ...accomodations,
+        ...places,
+    ];
+
+    const coordinates = locations
+        .map(
+            (location) =>
+                `${location.longitude},${location.latitude}`
+        )
+        .join(';');
+
+    const url =
+        `https://router.project-osrm.org/table/v1/driving/${coordinates}` +
+        `?annotations=duration,distance`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(
+            `OSRM request failed: ${response.status}`
+        );
+    }
+
+    const matrix = await response.json();
+
+    const durationsMatrix = matrix.durations;
+    const distancesMatrix = matrix.distances;
+
+    /*
+     * Create maps so we can quickly find the OSRM matrix index
+     * for a particular accommodation/place.
+     */
+
+    const accommodationIndex = Object.fromEntries(
+        accomodations.map((accommodation, index) => [
+            accommodation.id,
+            index,
+        ])
+    );
+
+    const placeIndex = Object.fromEntries(
+        places.map((place, index) => [
+            place.id,
+            accomodations.length + index,
+        ])
+    );
+
+    const accommodationRanges = await Promise.all(
+        accomodations.map(async (accommodation) => ({
+            accommodation,
+            startDay: await getDayNumber(
+                accommodation.check_in,
+                trip.start_date
+            ),
+            endDay: await getDayNumber(
+                accommodation.check_out,
+                trip.start_date
+            ),
+        }))
+    );
+
+    const lastDay = await getDayNumber(
+        trip.end_date,
+        trip.start_date
+    );
+
+    const getAccommodationForDay = (day: number) => {
+        return accommodationRanges.find(
+            ({ startDay, endDay }) =>
+                day >= (startDay - 1) &&
+                (
+                    day < (endDay - 1) ||
+                    day === lastDay - 1
+                )
+        )?.accommodation;
+    };
+
+    /*
+     * Update each place.
+     */
     for (const [column, ids] of Object.entries(placeIds)) {
+        const day = Number(column);
+
         for (const [sortOrder, id] of ids.entries()) {
+            const placeId = String(id);
+
+            const toIndex = placeIndex[placeId];
+
+            if (toIndex === undefined) {
+                throw new Error(
+                    `Could not find OSRM index for place ${placeId}`
+                );
+            }
+
+            let fromIndex: number;
+
+            if (sortOrder === 0) {
+                /*
+                 * First place of the day:
+                 *
+                 * Accommodation → Place
+                 */
+                const accommodation =
+                    getAccommodationForDay(day);
+
+                if (!accommodation) {
+                    throw new Error(
+                        `Could not find accommodation for day ${day}` 
+                    );
+                }
+
+                fromIndex =
+                    accommodationIndex[accommodation.id];
+
+                if (fromIndex === undefined) {
+                    throw new Error(
+                        `Could not find OSRM index for accommodation ${accommodation.id}`
+                    );
+                }
+            } else {
+                /*
+                 * Subsequent place:
+                 *
+                 * Previous Place → Current Place
+                 */
+                const previousPlaceId = String(
+                    ids[sortOrder - 1]
+                );
+
+                fromIndex =
+                    placeIndex[previousPlaceId];
+
+                if (fromIndex === undefined) {
+                    throw new Error(
+                        `Could not find OSRM index for previous place ${previousPlaceId}`
+                    );
+                }
+            }
+
+            const distance =
+                distancesMatrix[fromIndex][toIndex];
+
+            const duration =
+                durationsMatrix[fromIndex][toIndex];
+
+            console.log({
+                day,
+                sortOrder,
+                fromIndex,
+                toIndex,
+                from: locations[fromIndex]?.name,
+                to: locations[toIndex]?.name,
+                distance,
+                duration,
+            });
+
             const { error } = await supabase
                 .from('trip_places')
                 .update({
-                    day: Number(column),
+                    day,
                     sort_order: sortOrder,
+                    distance,
+                    time: duration,
                 })
-                .eq('id', String(id))
+                .eq('id', placeId)
                 .eq('trip_id', tripId);
 
             if (error) {
@@ -515,6 +814,33 @@ export async function savePlaces(
             }
         }
     }
+
+    /*
+     * Fetch the updated places.
+     *
+     * getPlaces() uses day numbers starting at 1,
+     * so use index + 1 here.
+     */
+    const dates = getDatesBetween(
+        trip.start_date,
+        trip.end_date
+    );
+
+    const updatedPlaces = await Promise.all(
+        dates.map((_, index) =>
+            getPlaces(tripId, index + 1)
+        )
+    );
+
+    const placeMap = Object.fromEntries(
+        updatedPlaces
+            .flat()
+            .map((place) => [place.id, place])
+    );
+
+    return {
+        placeMap,
+    };
 }
 
 function getDatesBetween(startDate: string, endDate: string) {

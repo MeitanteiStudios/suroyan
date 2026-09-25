@@ -7,6 +7,7 @@ export type Place = {
     name: string;
     url?: string;
     distance?: string;
+    time?: string;
     disabled?: boolean;
 };
 
@@ -29,6 +30,22 @@ export default function PlaceCard({
         accept: 'item',
         group: column,
     });
+
+    function formatDuration(seconds: number): string {
+        const minutes = Math.round(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+
+        if (hours === 0) {
+            return `${remainingMinutes} mins`;
+        }
+
+        if (remainingMinutes === 0) {
+            return `${hours} hr`;
+        }
+
+        return `${hours} hr ${remainingMinutes} mins`;
+    }
 
     return (
         <div
@@ -61,9 +78,11 @@ export default function PlaceCard({
                     </p>
                 )}
 
-                {place.distance && (
+                {Number(place.distance) > 0 && (
                     <p className="text-xs text-gray-600">
-                        Distance: {place.distance}
+                        Distance: {(Number(place.distance) / 1000).toFixed(1)} km
+                        {' '}
+                        (Approx. {formatDuration(Number(place.time))})
                     </p>
                 )}
             </div>

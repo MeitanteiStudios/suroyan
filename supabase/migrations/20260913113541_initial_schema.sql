@@ -39,6 +39,7 @@ create table public.trip_places (
     category text,
     day integer not null default 0,
     sort_order integer not null default 0,
-    distance integer not null default 0,
+    distance float not null default 0,
+    time float not null default 0,
     created_at timestamptz not null default now()
 );

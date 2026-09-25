@@ -13,7 +13,6 @@ export default function Page() {
             const data = await getTrips();
 
             if (data.length > 0) {
-                console.log('Main Layout');
                 router.replace(`/dashboard/${data[0].id}`);
             }
         }

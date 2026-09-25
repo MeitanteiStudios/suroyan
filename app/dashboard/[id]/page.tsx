@@ -8,6 +8,8 @@ import { getTrip, savePlaces } from '@/lib/supabase/trips/actions';
 import { DragDropProvider } from '@dnd-kit/react';
 import PlaceCard, { Place } from '../../ui/components/trips/PlaceCard';
 import { move } from '@dnd-kit/helpers';
+import { optimizeTrip } from '@/lib/supabase/maps/actions';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 export type Accomodation = {
     name: string;
@@ -33,35 +35,44 @@ export default function Page({
     const [accomodations, setAccomodations] = useState<Accomodation[]>([]);
     const [accoms, setAccoms] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    const loadTrip = async () => {
+        const { id } = await params;
+        if (!id) {
+            setLoading(false);
+            return;
+        }
+
+        setTripId(id);
+        setLoading(true);
+
+        try {
+            const result = await getTrip(id);
+            console.log(result)
+            setTrip(result.trip);
+            setDays(result.days);
+            setPlaces(result.placeMap);
+            setAccomodations(result.formattedAccommodations);
+            setAccoms(result.accommodations);
+            setPlaceIds(result.placeIds);
+        } catch (error) {
+            console.error('Failed to load trip: ', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOtimizeTrip = async () => {
+        setLoading(true);
+        const optimizedTrip = await optimizeTrip(tripId);
+        console.log(optimizedTrip);
+        loadTrip();
+    };
 
     useEffect(() => {
-        const loadTrip = async () => {
-            const { id } = await params;
-            if (!id) {
-                setLoading(false);
-                return;
-            }
-
-            setTripId(id);
-            setLoading(true);
-
-            try {
-                const result = await getTrip(id);
-                setTrip(result.trip);
-                setDays(result.days);
-                setPlaces(result.placeMap);
-                setAccomodations(result.formattedAccommodations);
-                setAccoms(result.accommodations);
-                setPlaceIds(result.placeIds);
-            } catch (error) {
-                console.error('Failed to load trip: ', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         loadTrip();
-    }, [tripId]);
+    }, []);
 
     const dayCount = days.length;
 
@@ -78,13 +89,20 @@ export default function Page({
             {trip && (
                 <div className="flex justify-between">
                     <EditTrip trip={trip} accomodations={accoms} />
-                    <AddPlace tripId={trip?.id} />
+                    <div className="flex gap-2 items-center">
+                        {saving && <ArrowPathIcon className="h-5 w-5 animate-spin" />}
+                        <button onClick={handleOtimizeTrip} className="bg-sky-200 hover:bg-sky-300 cursor-pointer font-medium px-6 py-2 rounded disabled:opacity-50">
+                            Optimize Your Trip
+                        </button>
+                        <AddPlace tripId={trip?.id} />
+                    </div>
                 </div>
             )}
 
             {/* Trip Content */}
             <div className="w-full bg-sky-100 grow rounded-md p-4 pt-0 overflow-auto">
-                {loading && <div className="w-full h-full flex items-center justify-center">
+                {loading && <div className="w-full h-full flex gap-4 items-center justify-center">
+                    <ArrowPathIcon className="h-5 w-5 animate-spin" />
                     <h3 className="text-lg font-medium">Fetching your trip...</h3>
                 </div>}
                 <div className="min-w-max">
@@ -156,9 +174,12 @@ export default function Page({
                             setPlaceIds((placeIds) => move(placeIds, event));
                         }}
                         onDragEnd={(event) => {
+                            setSaving(true);
                             setTimeout(async () => {
-                                await savePlaces(tripId, placeIds);
-                            }, 2000);
+                                const response = await savePlaces(tripId, placeIds);
+                                setPlaces(response.placeMap);
+                                setSaving(false);
+                            }, 1000);
                         }}
                     >
                         <form id="placeCardForm" className="flex gap-2">
