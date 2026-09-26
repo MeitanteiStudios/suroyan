@@ -150,7 +150,7 @@ export default function AccomodationInput({
                                 setShowDropdown(false);
                             }, 300);
                         }}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                 </div>
 
@@ -166,7 +166,7 @@ export default function AccomodationInput({
                                 check_in: e.target.value,
                             })
                         }
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                 </div>
 
@@ -182,7 +182,7 @@ export default function AccomodationInput({
                                 check_out: e.target.value,
                             })
                         }
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                 </div>
 
@@ -202,7 +202,7 @@ export default function AccomodationInput({
             {showDropdown &&
                 createPortal(
                     <ul
-                        className="fixed z-[9999] mt-1 rounded-md border border-gray-300 bg-white p-2 shadow-lg overflow-auto max-h-80"
+                        className="fixed z-[9999] mt-1 rounded-md border bg-gray-700 border-gray-600 text-gray-300 p-2 shadow-lg overflow-auto max-h-80"
                         style={{
                             top: dropdownPosition.top,
                             left: dropdownPosition.left,
@@ -213,7 +213,7 @@ export default function AccomodationInput({
                             ([placeId, place]) => (
                                 <li
                                     key={placeId}
-                                    className="cursor-pointer p-2 hover:bg-sky-100"
+                                    className="cursor-pointer p-2 hover:bg-gray-500"
                                     onMouseDown={(e) => {
                                         e.preventDefault();
                                         choosePlace(placeId);

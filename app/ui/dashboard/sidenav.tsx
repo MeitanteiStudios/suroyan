@@ -16,12 +16,12 @@ export default function SideNav({
 }: SideNavProps) {
 
   return (
-    <div className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col text-gray-600
-    bg-white px-3 py-4 shadow-lg ${
+    <div className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col text-gray-300
+    bg-gray-800 px-3 py-4 shadow-lg ${
         isOpen ? 'block' : 'hidden'
       }`}>
       <span
-        className="mb-8 border-b-2 px-3 border-b-gray-50 flex items-center justify-between rounded-md"
+        className="mb-8 px-3 flex items-center justify-between rounded-md"
       >
         <div className="w-32 text-blue-600 md:w-40">
           <span className="block md:hidden"><AcmeLogo  /></span>
@@ -29,7 +29,7 @@ export default function SideNav({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="rounded-md p-1 hover:bg-sky-100"
+          className="rounded-md p-1 hover:bg-gray-500"
         >
           <Bars3Icon className="h-6 w-6" />
         </button>
@@ -46,7 +46,7 @@ export default function SideNav({
         <AddTrip />
         <div className="h-auto w-full grow rounded-md block"></div>
         <form>
-          <button className="flex h-[48px] w-full grow items-center gap-2 rounded-md text-sm font-medium hover:bg-sky-100 hover:text-blue-600 flex-none justify-start p-2 px-3">
+          <button className="flex h-[48px] w-full grow items-center gap-2 rounded-md text-sm font-medium hover:bg-gray-500 flex-none justify-start p-2 px-3">
             <PowerIcon className="w-6" />
             <div className="block">Sign Out</div>
           </button>

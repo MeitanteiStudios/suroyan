@@ -79,26 +79,26 @@ export default function AccomodationFields({
 
     return (
         <div className="w-full flex flex-col gap-4">
-            <p className="block font-medium text-gray-700 mt-8">
+            <p className="block font-medium text-gray-300 mt-8">
                 Accomodations
             </p>
 
             <div className="flex flex-col gap-2">
                 <div className="flex gap-2">
                     <div className="w-1/3">
-                        <p className="block font-medium text-gray-700">
+                        <p className="block font-medium text-gray-300">
                             Address
                         </p>
                     </div>
 
                     <div className="w-1/3">
-                        <p className="block font-medium text-gray-700">
+                        <p className="block font-medium text-gray-300">
                             Check-in
                         </p>
                     </div>
 
                     <div className="w-1/3">
-                        <p className="block font-medium text-gray-700">
+                        <p className="block font-medium text-gray-300">
                             Check-out
                         </p>
                     </div>

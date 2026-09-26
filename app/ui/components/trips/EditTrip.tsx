@@ -66,7 +66,7 @@ export default function EditTrip({
                             accoms={accomodations}
                         />
 
-                        <div className="sticky bottom-0 flex items-center justify-center gap-4 bg-white py-4">
+                        <div className="sticky bottom-0 flex items-center justify-center gap-4 bg-gray-800 py-4">
                             <button
                                 type="submit"
                                 disabled={isPending}

@@ -61,7 +61,7 @@ export default function AddTrip() {
                     e.preventDefault();
                     setIsModalOpen(true);
                 }}
-                className="flex h-[48px] items-center gap-2 rounded-md text-sm font-medium hover:bg-sky-100 hover:text-blue-600 flex-none justify-start p-2 px-3"
+                className="flex h-[48px] items-center gap-2 rounded-md text-sm font-medium hover:bg-gray-500 flex-none justify-start p-2 px-3"
             >
                 <PlusIcon className="w-4" />
                 <p className="text-md">Add A Trip</p>
@@ -93,7 +93,7 @@ export default function AddTrip() {
                     </div>
 
                     {/* Fixed/sticky buttons */}
-                    <div className="sticky bottom-0 flex shrink-0 items-center justify-center gap-4 bg-white py-4">
+                    <div className="sticky bottom-0 flex shrink-0 items-center justify-center gap-4 bg-gray-800 mt-8 py-4">
                         <button
                             type="submit"
                             disabled={isPending}

@@ -23,7 +23,7 @@ export default function Modal({
             onClick={onClose}
         >
             <div
-                className={`w-full ${width || 'max-w-lg'} max-h-[90vh] flex flex-col rounded-lg bg-white p-6 shadow-xl`}
+                className={`w-full ${width || 'max-w-lg'} max-h-[90vh] flex flex-col rounded-lg bg-gray-800 p-6 shadow-xl`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Close button */}
@@ -35,7 +35,7 @@ export default function Modal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="text-gray-500 hover:text-gray-800"
+                        className="text-gray-500 hover:text-gray-300"
                     >
                         ✕
                     </button>

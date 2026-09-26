@@ -16,14 +16,14 @@ export default function NavBar({
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`rounded-md p-1 hover:bg-sky-100`}
+                className={`rounded-md p-1 hover:bg-gray-500`}
                 >
                 <Bars3Icon className="h-6 w-6" />
             </button>
         </div>
         <AcmeLogo />
         <div className="flex justify-end gap-4">
-            <div className="flex-col items-end justify-center gap-1 text-sm text-gray-600 hidden md:flex">
+            <div className="flex-col items-end justify-center gap-1 text-sm text-gray-200 hidden md:flex">
                 <p>John Smith</p>
                 <p>johnsmith@email.com</p>
             </div>

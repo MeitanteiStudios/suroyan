@@ -38,19 +38,19 @@ export default function PlaceFields() {
 
     return (
         <div className="flex flex-col gap-2 w-full">
-            <p className="block font-medium text-lg text-gray-700 mb-2">
+            <p className="block font-medium text-lg text-gray-300 mb-2">
                 Places to Visit
             </p>
 
             <div className="flex gap-2 items-center">
                 <div className="w-1/2">
-                    <label className="block font-medium text-gray-700">
+                    <label className="block font-medium text-gray-300">
                         Address
                     </label>
                 </div>
 
                 <div className="w-1/2">
-                    <label className="block font-medium text-gray-700">
+                    <label className="block font-medium text-gray-300">
                         Name
                     </label>
                 </div>

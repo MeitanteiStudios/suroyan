@@ -37,7 +37,7 @@ export default function AddPlace({ tripId }: AddPlaceProps) {
         <div>
             <button
                 type='button'
-                className="rounded-full h-9 w-9 flex items-center justify-center bg-sky-200 hover:bg-sky-300"
+                className="rounded-full h-9 w-9 flex items-center justify-center bg-gray-700 hover:bg-gray-800"
                 title="Add a Place to Visit"
                 onClick={() => setIsModalOpen(true)}
             >
@@ -66,7 +66,7 @@ export default function AddPlace({ tripId }: AddPlaceProps) {
                     </div>
 
                     {/* Sticky buttons */}
-                    <div className="sticky bottom-0 flex shrink-0 items-center justify-center gap-4 bg-white py-4">
+                    <div className="sticky bottom-0 flex shrink-0 items-center justify-center gap-4 bg-gray-800 py-4">
                         <button
                             type="submit"
                             disabled={isPending}

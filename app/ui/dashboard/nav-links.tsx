@@ -20,7 +20,7 @@ export default function NavLinks() {
           <a
             key={trip.name}
             href={`/dashboard/${trip.id}`}
-            className="flex h-[48px] items-center gap-2 rounded-md text-sm font-medium hover:bg-sky-100 hover:text-blue-600 justify-start p-2 px-3"
+            className="flex h-[48px] items-center gap-2 rounded-md text-sm font-medium hover:bg-gray-500 justify-start p-2 px-3"
           >
             <p className="block">{trip.name}</p>
           </a>

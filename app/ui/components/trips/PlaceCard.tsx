@@ -51,7 +51,7 @@ export default function PlaceCard({
         <div
             ref={ref}
             data-dragging={isDragging}
-            className={`w-full rounded-md bg-sky-200 p-4 transition-opacity ${
+            className={`w-full rounded-md bg-sky-500 p-4 transition-opacity ${
                 isDragging ? 'opacity-50' : ''
             } ${place.disabled ? 'opacity-60' : ''}`}
         >
@@ -65,7 +65,7 @@ export default function PlaceCard({
                 </h3>
 
                 {place.url && (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-200">
                         <a
                             href={place.url}
                             target="_blank"
@@ -79,7 +79,7 @@ export default function PlaceCard({
                 )}
 
                 {Number(place.distance) > 0 && (
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-200">
                         Distance: {(Number(place.distance) / 1000).toFixed(1)} km
                         {' '}
                         (Approx. {formatDuration(Number(place.time))})

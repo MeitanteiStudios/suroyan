@@ -91,7 +91,7 @@ export default function Page({
                     <EditTrip trip={trip} accomodations={accoms} />
                     <div className="flex gap-2 items-center">
                         {saving && <ArrowPathIcon className="h-5 w-5 animate-spin" />}
-                        <button onClick={handleOtimizeTrip} className="bg-sky-200 hover:bg-sky-300 cursor-pointer font-medium px-6 py-2 rounded disabled:opacity-50">
+                        <button onClick={handleOtimizeTrip} className="bg-gray-700 hover:bg-gray-800 cursor-pointer font-medium px-6 py-2 rounded disabled:opacity-50">
                             Optimize Your Trip
                         </button>
                         <AddPlace tripId={trip?.id} />
@@ -100,14 +100,14 @@ export default function Page({
             )}
 
             {/* Trip Content */}
-            <div className="w-full bg-sky-100 grow rounded-md p-4 pt-0 overflow-auto">
+            <div className="w-full bg-gray-800 grow rounded-md p-4 pt-0 overflow-auto">
                 {loading && <div className="w-full h-full flex gap-4 items-center justify-center">
                     <ArrowPathIcon className="h-5 w-5 animate-spin" />
                     <h3 className="text-lg font-medium">Fetching your trip...</h3>
                 </div>}
                 <div className="min-w-max">
                     {/* Accommodations */}
-                    <div className="sticky top-0 z-30 bg-sky-100 py-1 pt-4">
+                    <div className="sticky top-0 z-30 bg-gray-800 py-1 pt-4">
                         <div className="flex gap-2 mb-2">
                             {accomodations.map((accommodation, index) => {
                                 let width;
@@ -132,7 +132,7 @@ export default function Page({
                                 return (
                                     <div
                                         key={accommodation.name}
-                                        className="shrink-0 bg-white p-2 rounded-md text-center font-semibold"
+                                        className="shrink-0 bg-gray-600 p-2 rounded-md text-center font-semibold"
                                         style={{
                                             width,
                                             marginLeft
@@ -146,7 +146,7 @@ export default function Page({
                     </div>
 
                     {/* Day Header */}
-                    <div className="sticky top-[68px] z-20 bg-sky-100 py-1">
+                    <div className="sticky top-[68px] z-20 bg-gray-800 w-full py-1">
                         <div className="flex gap-2 mb-2">
                             {days.map((day, index) => {
                                 const isWide = dayCount > threshold;
@@ -154,7 +154,7 @@ export default function Page({
                                 return (
                                     <span
                                         key={'dayHeader_' + index}
-                                        className="shrink-0 bg-white p-2 rounded-md text-center font-semibold"
+                                        className="shrink-0 bg-gray-600 p-2 rounded-md text-center font-semibold"
                                         style={{
                                             width: isWide
                                                 ? '13rem'

@@ -21,7 +21,7 @@ export default function Layout({ children, params }: { children: React.ReactNode
   }, [tripId]);
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden text-gray-600">
+    <div className="relative flex h-screen flex-col overflow-hidden text-gray-200 bg-gray-900">
       {/* Sidebar overlays everything */}
       <SideNav isOpen={isOpen} setIsOpen={setIsOpen} />
 
