@@ -9,6 +9,8 @@ export type Place = {
     distance?: string;
     time?: string;
     disabled?: boolean;
+    longitude?: number;
+    latitude?: number;
 };
 
 type PlaceCardProps = {

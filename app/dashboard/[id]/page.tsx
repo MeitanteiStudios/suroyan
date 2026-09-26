@@ -1,25 +1,27 @@
 'use client';
 
-import DayColumn, { Day } from '@/app/ui/components/trips/DayColumn';
+import { Day } from '@/app/ui/components/trips/DayColumn';
 import AddPlace from '../../ui/components/trips/AddPlace';
 import EditTrip from '../../ui/components/trips/EditTrip';
 import { useEffect, useState } from 'react';
 import { getTrip, savePlaces } from '@/lib/supabase/trips/actions';
-import { DragDropProvider } from '@dnd-kit/react';
-import PlaceCard, { Place } from '../../ui/components/trips/PlaceCard';
-import { move } from '@dnd-kit/helpers';
+import { Place } from '../../ui/components/trips/PlaceCard';
 import { optimizeTrip } from '@/lib/supabase/maps/actions';
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, ListBulletIcon, MapIcon } from '@heroicons/react/24/outline';
+import ListView from '@/app/ui/components/ListView';
+import MapView from '@/app/ui/components/MapView';
+import { MarkerData, Route } from '@/app/ui/components/trips/RouteMap';
 
 export type Accomodation = {
+    id: string,
     name: string;
     start: number;
     end: number;
 };
 
-type PlaceId = string | number;
-type PlaceIds = Record<string, PlaceId[]>;
-type PlaceMap = Record<string, Place>;
+export type PlaceId = string | number;
+export type PlaceIds = Record<string, PlaceId[]>;
+export type PlaceMap = Record<string, Place>;
 
 export default function Page({
     params,
@@ -36,6 +38,9 @@ export default function Page({
     const [accoms, setAccoms] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [view, setView] = useState<'list' | 'map'>('list');
+    const [routes, setRoutes] = useState<Route[]>([]);
+    const [markers, setMarkers] = useState<MarkerData[]>([]);
 
     const loadTrip = async () => {
         const { id } = await params;
@@ -56,6 +61,8 @@ export default function Page({
             setAccomodations(result.formattedAccommodations);
             setAccoms(result.accommodations);
             setPlaceIds(result.placeIds);
+            setRoutes(result.routes);
+            setMarkers(result.markers);
         } catch (error) {
             console.error('Failed to load trip: ', error);
         } finally {
@@ -87,10 +94,22 @@ export default function Page({
         <div className="w-full h-full flex flex-col gap-4">
             {/* Trip Header */}
             {trip && (
-                <div className="flex justify-between">
+                <div className="flex flex-col md:flex-row gap-4 justify-between">
                     <EditTrip trip={trip} accomodations={accoms} />
                     <div className="flex gap-2 items-center">
-                        {saving && <ArrowPathIcon className="h-5 w-5 animate-spin" />}
+                        {saving && <ArrowPathIcon className="h-6 w-6 animate-spin" />}
+                        <button
+                            type="button"
+                            onClick={() => setView(view === 'list' ? 'map' : 'list')}
+                            className="flex h-9 w-9 items-center justify-center rounded bg-gray-700 hover:bg-gray-800"
+                            title={view === 'list' ? 'Toggle to Map View' : 'Toggle to List View'}
+                        >
+                            {view === 'list' ? (
+                                <MapIcon className="h-6 w-6" />
+                            ) : (
+                                <ListBulletIcon className="h-6 w-6" />
+                            )}
+                        </button>
                         <button onClick={handleOtimizeTrip} className="bg-gray-700 hover:bg-gray-800 cursor-pointer font-medium px-6 py-2 rounded disabled:opacity-50">
                             Optimize Your Trip
                         </button>
@@ -100,109 +119,32 @@ export default function Page({
             )}
 
             {/* Trip Content */}
-            <div className="w-full bg-gray-800 grow rounded-md p-4 pt-0 overflow-auto">
-                {loading && <div className="w-full h-full flex gap-4 items-center justify-center">
-                    <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                    <h3 className="text-lg font-medium">Fetching your trip...</h3>
-                </div>}
-                <div className="min-w-max">
-                    {/* Accommodations */}
-                    <div className="sticky top-0 z-30 bg-gray-800 py-1 pt-4">
-                        <div className="flex gap-2 mb-2">
-                            {accomodations.map((accommodation, index) => {
-                                let width;
-                                let marginLeft: number|string  = 0;
-                                let dateLength: number  = accommodation.end - accommodation.start;
-
-                                if (dayCount > threshold) {
-                                    width = `${(dateLength) * 208}px`;
-                                    if (index == 0) {
-                                        marginLeft = '104px';
-                                    }
-                                } else {
-                                width = `calc(${(
-                                        (dateLength) * columnWidth
-                                    ).toFixed(2)}% + ${dateLength * 8}px)`;
-
-                                    if (index == 0) {
-                                        marginLeft = `${columnWidth / 2}%`;
-                                    }
-                                }
-
-                                return (
-                                    <div
-                                        key={accommodation.name}
-                                        className="shrink-0 bg-gray-600 p-2 rounded-md text-center font-semibold"
-                                        style={{
-                                            width,
-                                            marginLeft
-                                        }}
-                                    >
-                                        {accommodation.name}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Day Header */}
-                    <div className="sticky top-[68px] z-20 bg-gray-800 w-full py-1">
-                        <div className="flex gap-2 mb-2">
-                            {days.map((day, index) => {
-                                const isWide = dayCount > threshold;
-
-                                return (
-                                    <span
-                                        key={'dayHeader_' + index}
-                                        className="shrink-0 bg-gray-600 p-2 rounded-md text-center font-semibold"
-                                        style={{
-                                            width: isWide
-                                                ? '13rem'
-                                                : `${columnWidth}%`,
-                                        }}
-                                    >
-                                        {day.name}
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Day Row */}
-                    <DragDropProvider
-                        onDragOver={(event) => {
-                            setPlaceIds((placeIds) => move(placeIds, event));
-                        }}
-                        onDragEnd={(event) => {
-                            setSaving(true);
-                            setTimeout(async () => {
-                                const response = await savePlaces(tripId, placeIds);
-                                setPlaces(response.placeMap);
-                                setSaving(false);
-                            }, 1000);
-                        }}
-                    >
-                        <form id="placeCardForm" className="flex gap-2">
-                            {Object.entries(placeIds).map(([column, ids]) => (
-                                <DayColumn
-                                    key={column}
-                                    width={width}
-                                    id={column}
-                                >
-                                    {ids.map((id, index) => (
-                                        <PlaceCard
-                                            key={id}
-                                            place={places[String(id)]}
-                                            index={index}
-                                            column={column}
-                                        />
-                                    ))}
-                                </DayColumn>
-                            ))}
-                        </form>
-                    </DragDropProvider>
-                </div>
-            </div>
+            {view === 'list' ? (
+                <ListView
+                    loading={loading}
+                    days={days}
+                    places={places}
+                    placeIds={placeIds}
+                    accomodations={accomodations}
+                    tripId={tripId}
+                    dayCount={dayCount}
+                    threshold={threshold}
+                    columnWidth={columnWidth}
+                    width={width}
+                    setPlaces={setPlaces}
+                    setSaving={setSaving}
+                    setPlaceIds={setPlaceIds}
+                />
+            ) : (
+                <MapView
+                    routes={routes}
+                    markers={markers}
+                    days={days}
+                    places={places}
+                    placeIds={placeIds}
+                    accomodations={accomodations}
+                />
+            )}
         </div>
     );
 }
