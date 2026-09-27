@@ -1,9 +1,12 @@
 'use client';
 
+import { PlaceIds, PlaceMap } from '@/app/dashboard/[id]/page';
+import { deletePlace } from '@/lib/supabase/trips/actions';
 import { useSortable } from '@dnd-kit/react/sortable';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 export type Place = {
-    id: number;
+    id: string;
     name: string;
     url?: string;
     distance?: string;
@@ -17,12 +20,18 @@ type PlaceCardProps = {
     place: Place;
     index: number;
     column: any;
+    setPlaces: React.Dispatch<React.SetStateAction<PlaceMap>>;
+    setSaving: React.Dispatch<React.SetStateAction<boolean>>;
+    setPlaceIds: React.Dispatch<React.SetStateAction<PlaceIds>>;
 };
 
 export default function PlaceCard({
     place,
     index,
     column,
+    setPlaces,
+    setSaving,
+    setPlaceIds,
 }: PlaceCardProps) {
     const { ref, handleRef, isDragging } = useSortable({
         id: place.id,
@@ -49,17 +58,29 @@ export default function PlaceCard({
         return `${hours} hr ${remainingMinutes} mins`;
     }
 
+    const handleDeletePlace = async (placeId: string) => {
+        setSaving(true);
+
+        try {
+            const response = await deletePlace(placeId);
+            setPlaceIds(response.placeIds);
+            setPlaces(response.placeMap);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <div
             ref={ref}
             data-dragging={isDragging}
-            className={`w-full rounded-md bg-sky-500 p-4 transition-opacity ${
+            className={`group w-full rounded-md bg-sky-500 p-4 transition-opacity relative ${
                 isDragging ? 'opacity-50' : ''
             } ${place.disabled ? 'opacity-60' : ''}`}
         >
             <div
                 ref={place.disabled ? undefined : handleRef}
-                className={place.disabled ? 'cursor-default' : 'cursor-move'}
+                className={` ${place.disabled ? 'cursor-default' : 'cursor-move'}`}
             >
                 <input type="hidden" name="place_cards[][]" value={place.name} />
                 <h3 className="text-lg font-semibold">
@@ -88,6 +109,10 @@ export default function PlaceCard({
                     </p>
                 )}
             </div>
+
+            <button type="button" onClick={() => handleDeletePlace(place.id)} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <TrashIcon className="h-4 w-4 text-red-500 hover:text-red-600" />
+            </button>
         </div>
     );
 }

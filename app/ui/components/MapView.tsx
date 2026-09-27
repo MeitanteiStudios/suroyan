@@ -3,9 +3,17 @@
 import { Day } from '@/app/ui/components/trips/DayColumn';
 import { Place } from '@/app/ui/components/trips/PlaceCard';
 import DayDropdown from './trips/DayDropdown';
-import RouteMap, { MarkerData, Route } from './trips/RouteMap';
+import type { MarkerData, Route } from './trips/RouteMap';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { Accomodation, PlaceIds, PlaceMap } from '@/app/dashboard/[id]/page';
+
+const RouteMap = dynamic(
+    () => import('./trips/RouteMap'),
+    {
+        ssr: false,
+    }
+);
 
 type MapViewProps = {
     days: Day[];
@@ -22,7 +30,7 @@ export default function MapView({
     placeIds,
     accomodations,
     routes,
-    markers
+    markers,
 }: MapViewProps) {
     const [hoveredDay, setHoveredDay] = useState<number | null>(null);
     const [hoveredMarker, setHoveredMarker] = useState<string | null>(null);

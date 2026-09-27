@@ -727,6 +727,135 @@ export async function savePlaces(
     };
 }
 
+
+export async function deletePlace(placeId: String) {
+    const supabase = await createClient();
+
+    const { data: place, error: placeError } = await supabase
+        .from('trip_places')
+        .select('*')
+        .eq('id', placeId)
+        .single();
+
+    if (placeError) {
+        throw new Error(placeError.message);
+    }
+
+    // Update the next place's time, distance, and sort order
+    const { data: nextPlace, error: nextPlaceError } = await supabase
+        .from('trip_places')
+        .select('*')
+        .eq('day', place.day)
+        .eq('sort_order', place.sort_order + 1)
+        .eq('trip_id', place.trip_id)
+        .single();
+
+    if (nextPlaceError) {
+        throw new Error(nextPlaceError.message);
+    }
+
+    const { data: trip, error: tripError } = await supabase
+        .from('trips')
+        .select('*')
+        .eq('id', place.trip_id)
+        .eq('user_id', user_id)
+        .single();
+
+    if (tripError) {
+        throw new Error(tripError.message);
+    }
+
+    if (nextPlace) {
+        // Get the place before the current place
+        let prevPlace = null
+        if (place.sort_order > 0) {
+            const { data: prev, error: prevPlaceError } = await supabase
+                .from('trip_places')
+                .select('*')
+                .eq('day', place.day)
+                .eq('sort_order', place.sort_order + 1)
+                .eq('trip_id', place.trip_id)
+                .single();
+
+            if (prevPlaceError) {
+                throw new Error(prevPlaceError.message);
+            }
+            prevPlace = prev;
+        } else {
+            const accomodations = await getAccomodations(place.trip_id);
+            const prev = await getAccommodationForDay(trip, place.day, accomodations);
+            prevPlace = prev;
+        }
+
+        if (prevPlace) {
+            const coordinates = `${prevPlace.longitude},${prevPlace.latitude};${nextPlace.longitude},${nextPlace.latitude}`;
+            const url =
+                `https://router.project-osrm.org/table/v1/driving/${coordinates}` +
+                `?annotations=duration,distance`;
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(
+                    `OSRM request failed: ${response.status}`
+                );
+            }
+
+            const matrix = await response.json();
+
+            const durationsMatrix = matrix.durations;
+            const distancesMatrix = matrix.distances;
+
+            const { error } = await supabase
+                .from('trip_places')
+                .update({
+                    sort_order: place.sort_order,
+                    distance: distancesMatrix[0][1],
+                    time: durationsMatrix[0][1],
+                })
+                .eq('id', nextPlace.id)
+                .eq('trip_id', nextPlace.trip_id);
+
+            if (error) {
+                throw new Error(error.message);
+            }
+        }
+    }
+
+    // Delete the current place
+    const { error } = await supabase
+        .from('trip_places')
+        .delete()
+        .eq('id', placeId)
+        .eq('trip_id', place.trip_id);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    const dates = getDatesBetween(trip.start_date, trip.end_date);
+    const places = await Promise.all(
+        dates.map((_, index) => getPlaces(trip.id, index))
+    );
+
+    const placeIds = Object.fromEntries(
+        places.map((dayPlaces, index) => [
+            String(index),
+            (dayPlaces ?? []).map((place) => place.id),
+        ])
+    );
+
+    const placeMap = Object.fromEntries(
+        places
+            .flat()
+            .map((place) => [place.id, place])
+    );
+
+    return {
+        placeIds,
+        placeMap
+    };
+}
+
 function getDatesBetween(startDate: string, endDate: string) {
     const dates: string[] = [];
 

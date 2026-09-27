@@ -174,7 +174,10 @@ export default function ListView({
                                                     key={'placecared-'+id}
                                                     place={places[String(id)]}
                                                     index={index}
-                                                    column={column                                                }
+                                                    column={column}
+                                                    setPlaces={setPlaces}
+                                                    setSaving={setSaving}
+                                                    setPlaceIds={setPlaceIds}
                                                 />
                                             )
                                         )}
