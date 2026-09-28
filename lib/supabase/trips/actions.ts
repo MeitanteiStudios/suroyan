@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getRoutes, optimizeTrip } from '../maps/actions';
 import { marker } from 'leaflet';
+import { FormErrors } from '@/app/ui/components/trips/AddTrip';
 
 const user_id = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -10,6 +11,20 @@ export async function createTrip(formData: FormData) {
     const supabase = await createClient();
 
     try {
+        const tripErrors = validateTripForm(formData);
+        const placeErrors = validatePlaces(formData);
+        const errors = {
+            ...tripErrors,
+            ...placeErrors,
+        };
+
+        if (Object.keys(errors).length > 0) {
+            return {
+                success: false,
+                errors,
+                message: 'You have errors in your form.',
+            };
+        }
         const data = Object.fromEntries(formData);
 
         // throw new Error('Test Error');
@@ -93,6 +108,7 @@ export async function createTrip(formData: FormData) {
         return {
             success: true,
             message: 'Trip created successfully!',
+            errors: {},
             tripId: trip.id,
         };
     } catch (error) {
@@ -101,6 +117,7 @@ export async function createTrip(formData: FormData) {
             message: error instanceof Error
                 ? error.message
                 : 'Something went wrong.',
+            errors: {},
         };
     }
 }
@@ -109,6 +126,15 @@ export async function updateTrip(formData: FormData) {
     const supabase = await createClient();
 
     try {
+        const errors = validateTripForm(formData);
+        if (Object.keys(errors).length > 0) {
+            return {
+                success: false,
+                errors,
+                message: 'You have errors in your form.',
+            };
+        }
+
         const data = Object.fromEntries(formData);
 
         const tripId = data['trip_id'] as string;
@@ -250,6 +276,7 @@ export async function updateTrip(formData: FormData) {
             success: true,
             message: 'Trip updated successfully!',
             trip,
+            errors: {}
         };
     } catch (error) {
         return {
@@ -258,6 +285,7 @@ export async function updateTrip(formData: FormData) {
                 error instanceof Error
                     ? error.message
                     : 'Something went wrong.',
+            errors: {}
         };
     }
 }
@@ -441,6 +469,15 @@ export async function addPlaces(formData: FormData) {
     const supabase = await createClient();
 
     try {
+        const errors = validatePlaces(formData);
+        if (Object.keys(errors).length > 0) {
+            return {
+                success: false,
+                errors,
+                message: 'You have errors in your form.',
+            };
+        }
+
         const data = Object.fromEntries(formData);
 
         const tripId = data['trip_id'] as string;
@@ -510,6 +547,7 @@ export async function addPlaces(formData: FormData) {
             success: true,
             message: 'Places added successfully!',
             places: insertedPlaces,
+            errors: {},
         };
     } catch (error) {
         return {
@@ -518,6 +556,7 @@ export async function addPlaces(formData: FormData) {
                 error instanceof Error
                     ? error.message
                     : 'Something went wrong.',
+            errors: {},
         };
     }
 }
@@ -900,3 +939,222 @@ export async function getAccommodationForDay(trip: any, day: number, accomodatio
             )
     )?.accommodation;
 };
+
+type AccommodationInput = {
+    index: number;
+    address: string;
+    checkIn: string;
+    checkOut: string;
+};
+
+function validateTripForm(formData: FormData): FormErrors {
+    const errors: FormErrors = {};
+
+    const addError = (field: string, message: string) => {
+        if (!errors[field]) {
+            errors[field] = [];
+        }
+
+        errors[field].push(message);
+    };
+
+    const tripName = String(formData.get('trip_name') ?? '').trim();
+    const startDate = String(formData.get('start_date') ?? '').trim();
+    const endDate = String(formData.get('end_date') ?? '').trim();
+
+    // Trip validation
+    if (!tripName) {
+        addError('trip_name', 'Trip name is required.');
+    }
+
+    if (!startDate) {
+        addError('start_date', 'Start date is required.');
+    }
+
+    if (!endDate) {
+        addError('end_date', 'End date is required.');
+    }
+
+    if (startDate && endDate && startDate > endDate) {
+        addError('end_date', 'End date cannot be before start date.');
+    }
+
+    // Accommodation validation
+    const accommodations: AccommodationInput[] = [];
+
+    for (let i = 0; ; i++) {
+        const address = String(
+            formData.get(`accomodation[${i}][address]`) ?? ''
+        ).trim();
+
+        const placeId = String(
+            formData.get(`accomodation[${i}][place_id]`) ?? ''
+        ).trim();
+
+        const latitude = String(
+            formData.get(`accomodation[${i}][latitude]`) ?? ''
+        ).trim();
+
+        const longitude = String(
+            formData.get(`accomodation[${i}][longitude]`) ?? ''
+        ).trim();
+
+        const checkIn = String(
+            formData.get(`accomodation[${i}][check_in]`) ?? ''
+        ).trim();
+
+        const checkOut = String(
+            formData.get(`accomodation[${i}][check_out]`) ?? ''
+        ).trim();
+
+        // Stop when there is no accommodation at this index
+        if (!address && !checkIn && !checkOut) {
+            break;
+        }
+
+        // Individual field validation
+        if (!address || !placeId || !latitude || !longitude) {
+            addError(
+                `accomodation[${i}][address]`,
+                'Accommodation is required.'
+            );
+        }
+
+        if (!checkIn) {
+            addError(
+                `accomodation[${i}][check_in]`,
+                'Check-in date is required.'
+            );
+        }
+
+        if (!checkOut) {
+            addError(
+                `accomodation[${i}][check_out]`,
+                'Check-out date is required.'
+            );
+        }
+
+        // Only perform date comparisons when both dates exist
+        if (checkIn && checkOut) {
+            if (checkIn >= checkOut) {
+                addError(
+                    `accomodation[${i}][check_out]`,
+                    'Check-out date must be after check-in date.'
+                );
+            }
+
+            if (startDate && checkIn < startDate) {
+                addError(
+                    `accomodation[${i}][check_in]`,
+                    'Check-in date cannot be before the trip start date.'
+                );
+            }
+
+            if (endDate && checkOut > endDate) {
+                addError(
+                    `accomodation[${i}][check_out]`,
+                    'Check-out date cannot be after the trip end date.'
+                );
+            }
+        }
+
+        accommodations.push({
+            index: i,
+            address,
+            checkIn,
+            checkOut,
+        });
+    }
+
+    // Check accommodation overlaps
+    for (let i = 0; i < accommodations.length; i++) {
+        for (let j = i + 1; j < accommodations.length; j++) {
+            const a = accommodations[i];
+            const b = accommodations[j];
+
+            // Skip if either accommodation is missing dates
+            if (!a.checkIn || !a.checkOut || !b.checkIn || !b.checkOut) {
+                continue;
+            }
+
+            const overlaps =
+                a.checkIn < b.checkOut &&
+                b.checkIn < a.checkOut;
+
+            if (overlaps) {
+                addError(
+                    `accomodation[${a.index}][address]`,
+                    `This accommodation overlaps with Accommodation ${b.index + 1}.`
+                );
+
+                addError(
+                    `accomodation[${b.index}][address]`,
+                    `This accommodation overlaps with Accommodation ${a.index + 1}.`
+                );
+            }
+        }
+    }
+
+    return errors;
+}
+
+function validatePlaces(formData: FormData): FormErrors {
+    const errors: FormErrors = {};
+
+    const addError = (field: string, message: string) => {
+        if (!errors[field]) {
+            errors[field] = [];
+        }
+
+        errors[field].push(message);
+    };
+
+    for (let i = 0; ; i++) {
+        const name = String(
+            formData.get(`place[${i}][name]`) ?? ''
+        ).trim();
+
+        const address = String(
+            formData.get(`place[${i}][address]`) ?? ''
+        ).trim();
+
+        const latitude = String(
+            formData.get(`place[${i}][latitude]`) ?? ''
+        ).trim();
+
+        const longitude = String(
+            formData.get(`place[${i}][longitude]`) ?? ''
+        ).trim();
+
+        const placeId = String(
+            formData.get(`place[${i}][place_id]`) ?? ''
+        ).trim();
+
+        // No place at this index
+        if (
+            !name &&
+            !address &&
+            !latitude &&
+            !longitude &&
+            !placeId
+        ) {
+            break;
+        }
+
+        if (!name) {
+            addError(
+                `place[${i}][name]`,
+                'Place name is required.'
+            );
+        }
+
+        if (!address || !latitude || !longitude || !placeId) {
+            addError(
+                `place[${i}][address]`,
+                'Place address is required.'
+            );
+        }
+    }
+
+    return errors;
+}

@@ -3,6 +3,7 @@
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import PlaceInput from './PlaceInput';
+import { FormErrors } from './AddTrip';
 
 export type Place = {
     id: number;
@@ -10,7 +11,13 @@ export type Place = {
     name: string;
 };
 
-export default function PlaceFields() {
+type PlaceFieldsProps = {
+    errors: FormErrors;
+};
+
+export default function PlaceFields({
+    errors,
+}: PlaceFieldsProps) {
     const [places, setPlaces] = useState<Place[]>([
         {
             id: 0,
@@ -64,6 +71,7 @@ export default function PlaceFields() {
                     place={place}
                     index={index}
                     onRemove={removePlace}
+                    errors={errors}
                 />
             ))}
 

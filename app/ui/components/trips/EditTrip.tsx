@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import Modal from '../modal';
 import AccomodationFields from './AccomodationFields';
 import TripFields from './TripFields';
 import { updateTrip } from '@/lib/supabase/trips/actions';
+import { FormErrors, Result } from './AddTrip';
 
 export type EditTripProps = {
     trip: any | null;
@@ -18,6 +19,7 @@ export default function EditTrip({
 }: EditTripProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
+    const [errors, setErrors] = useState<FormErrors>({});
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -26,6 +28,11 @@ export default function EditTrip({
 
         startTransition(async () => {
             const response = await updateTrip(formData);
+
+            if (!response.success) {
+                setErrors(response.errors);
+                return;
+            }
 
             if (response.success) {
                 setIsModalOpen(false);
@@ -36,6 +43,14 @@ export default function EditTrip({
             }
         });
     };
+
+    useEffect(() => {
+        const resetErrors = async () => {
+            setErrors({});
+        }
+
+        resetErrors();
+    }, [isModalOpen]);
 
     return (
         <div>
@@ -60,9 +75,9 @@ export default function EditTrip({
             >
                 <form onSubmit={handleSubmit}>
                     <div className="flex flex-col gap-4">
-                        <TripFields trip={trip} />
+                        <TripFields trip={trip} errors={errors} />
 
-                        <AccomodationFields
+                        <AccomodationFields errors={errors}
                             accoms={accomodations}
                         />
 

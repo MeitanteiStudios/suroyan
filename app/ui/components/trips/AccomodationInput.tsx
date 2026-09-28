@@ -11,6 +11,8 @@ import {
 } from '@/lib/supabase/maps/actions';
 
 import { Accomodation } from './AccomodationFields';
+import { FormErrors } from './AddTrip';
+import ErrorMessage from './ErrorMessage';
 
 type AccomodationInputProps = {
     accomodation: Accomodation;
@@ -20,6 +22,7 @@ type AccomodationInputProps = {
         id: string,
         updates: Partial<Accomodation>
     ) => void;
+    errors?: FormErrors,
 };
 
 export default function AccomodationInput({
@@ -27,6 +30,7 @@ export default function AccomodationInput({
     index,
     onRemove,
     onChange,
+    errors,
 }: AccomodationInputProps) {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -35,18 +39,6 @@ export default function AccomodationInput({
     const [options, setOptions] = useState<
         Record<string, PlaceResult>
     >({});
-
-    const [placeId, setPlaceId] = useState<number | undefined>(
-        undefined
-    );
-
-    const [latitude, setLatitude] = useState<string | undefined>(
-        undefined
-    );
-
-    const [longitude, setLongitude] = useState<
-        string | undefined
-    >(undefined);
 
     const [dropdownPosition, setDropdownPosition] = useState({
         top: 0,
@@ -196,6 +188,38 @@ export default function AccomodationInput({
                 >
                     <TrashIcon className="w-4 h-4 text-red-500 hover:text-red-700" />
                 </button>
+            </div>
+
+            <div className="flex gap-2 items-center">
+                {/* Address */}
+                <div className="w-1/3">
+                    {errors && errors[`accomodation[${index}][address]`]?.map((error, errorIndex) => (
+                        <ErrorMessage
+                            index={`accomodation[${index}][address]${errorIndex}`}
+                            error={error}
+                        />
+                    ))}
+                </div>
+
+                {/* Check-in */}
+                <div className="w-1/3">
+                    {errors && errors[`accomodation[${index}][check_in]`]?.map((error, errorIndex) => (
+                        <ErrorMessage
+                            index={`accomodation[${index}][check_in]${errorIndex}`}
+                            error={error}
+                        />
+                    ))}
+                </div>
+
+                {/* Check-out */}
+                <div className="w-1/3">
+                    {errors && errors[`accomodation[${index}][check_out]`]?.map((error, errorIndex) => (
+                        <ErrorMessage
+                            index={`accomodation[${index}][check_out]${errorIndex}`}
+                            error={error}
+                        />
+                    ))}
+                </div>
             </div>
 
             {/* Autocomplete dropdown */}

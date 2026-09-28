@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Modal from '../modal';
 import PlaceFields from './PlaceFields';
@@ -9,16 +9,36 @@ import TripFields from './TripFields';
 import { createTrip } from '@/lib/supabase/trips/actions';
 import { useRouter } from 'next/navigation';
 
+export type FormErrors = Record<string, string[]>;
+
+export type Result = {
+    success: boolean;
+    message: string;
+    errors: FormErrors;
+    tripId?: string;
+};
+
+
 export default function AddTrip() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [notification, setNotification] = useState('');
     const [isPending, startTransition] = useTransition();
-    const [result, setResult] = useState({
-        'success': false,
-        'message': '',
-    })
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [result, setResult] = useState<Result>({
+        success: false,
+        message: '',
+        errors: {},
+    });
 
     const router = useRouter();
+
+    useEffect(() => {
+        const resetErrors = async () => {
+            setErrors({});
+        }
+
+        resetErrors();
+    }, [isModalOpen]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -27,6 +47,11 @@ export default function AddTrip() {
 
         startTransition(async () => {
             const response = await createTrip(formData);
+
+            if (!response.success) {
+                setErrors(response.errors);
+                return;
+            }
 
             setResult(response);
 
@@ -82,12 +107,12 @@ export default function AddTrip() {
                     <div className="min-h-0 flex-1 overflow-auto">
                         <div className="flex gap-8 mt-8">
                             <div className="w-1/2 flex flex-col gap-4">
-                                <TripFields trip={null} />
-                                <AccomodationFields accoms={null} />
+                                <TripFields trip={null} errors={errors} />
+                                <AccomodationFields accoms={null} errors={errors} />
                             </div>
 
                             <div className="w-1/2">
-                                <PlaceFields />
+                                <PlaceFields errors={errors} />
                             </div>
                         </div>
                     </div>

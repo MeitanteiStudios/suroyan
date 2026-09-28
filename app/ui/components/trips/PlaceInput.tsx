@@ -10,15 +10,19 @@ import {
     PlaceResult,
     searchPlace,
 } from '@/lib/supabase/maps/actions';
+import { FormErrors } from './AddTrip';
+import ErrorMessage from './ErrorMessage';
 
 export default function PlaceInput({
     place,
     index,
     onRemove,
+    errors,
 }: {
     place: Place;
     index: number;
     onRemove: (id: number) => void;
+    errors: FormErrors
 }) {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -154,6 +158,26 @@ export default function PlaceInput({
                 >
                     <TrashIcon className="h-4 w-4 text-red-500 hover:text-red-700" />
                 </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+                <div className="w-1/2">
+                    {errors && errors[`place[${index}][address]`]?.map((error, errorIndex) => (
+                        <ErrorMessage
+                            index={`place[${index}][address]${errorIndex}`}
+                            error={error}
+                        />
+                    ))}
+                </div>
+
+                <div className="w-1/2">
+                    {errors && errors[`place[${index}][name]`]?.map((error, errorIndex) => (
+                        <ErrorMessage
+                            index={`place[${index}][name]${errorIndex}`}
+                            error={error}
+                        />
+                    ))}
+                </div>
             </div>
 
             {showDropdown &&

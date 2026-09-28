@@ -3,6 +3,7 @@
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
 import AccomodationInput from './AccomodationInput';
+import { FormErrors } from './AddTrip';
 
 
 export type Accomodation = {
@@ -18,10 +19,12 @@ export type Accomodation = {
 
 type AccomodationFieldsProps = {
     accoms: Accomodation[] | null;
+    errors: FormErrors,
 };
 
 export default function AccomodationFields({
     accoms,
+    errors
 }: AccomodationFieldsProps) {
     const [accomodations, setAccomodations] = useState<Accomodation[]>(
         accoms && accoms.length > 0
@@ -113,6 +116,7 @@ export default function AccomodationFields({
                         index={index}
                         onRemove={removeAccomodation}
                         onChange={updateAccomodation}
+                        errors={errors}
                     />
                 ))}
 

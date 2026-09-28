@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import Modal from '../modal';
 import PlaceFields from './PlaceFields';
 import { addPlaces } from '@/lib/supabase/trips/actions';
 import { PlusIcon } from '@heroicons/react/24/outline';
+import { FormErrors } from './AddTrip';
 
 export type AddPlaceProps = {
     tripId: string;
@@ -13,6 +14,7 @@ export type AddPlaceProps = {
 export default function AddPlace({ tripId }: AddPlaceProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
+    const [errors, setErrors] = useState<FormErrors>({});
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -21,6 +23,11 @@ export default function AddPlace({ tripId }: AddPlaceProps) {
 
         startTransition(async () => {
             const response = await addPlaces(formData);
+
+            if (!response.success) {
+                setErrors(response.errors);
+                return;
+            }
 
             if (response.success) {
                 setIsModalOpen(false);
@@ -32,6 +39,14 @@ export default function AddPlace({ tripId }: AddPlaceProps) {
             }
         });
     };
+
+    useEffect(() => {
+        const resetErrors = async () => {
+            setErrors({});
+        }
+
+        resetErrors();
+    }, [isModalOpen]);
 
     return (
         <div>
@@ -62,7 +77,7 @@ export default function AddPlace({ tripId }: AddPlaceProps) {
                             value={tripId}
                         />
 
-                        <PlaceFields />
+                        <PlaceFields errors={errors} />
                     </div>
 
                     {/* Sticky buttons */}

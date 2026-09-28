@@ -1,9 +1,12 @@
+import { FormErrors } from "./AddTrip";
+import ErrorMessage from "./ErrorMessage";
 
 export type TripFieldsProps = {
     trip: any | null;
+    errors: FormErrors,
 };
 
-export default function TripFields({ trip }: TripFieldsProps) {
+export default function TripFields({ trip, errors }: TripFieldsProps) {
     return (
         <div className="w-full flex flex-col gap-4">
             <input type="hidden" name="trip_id" defaultValue={trip?.id ?? ''} />
@@ -18,6 +21,9 @@ export default function TripFields({ trip }: TripFieldsProps) {
                     defaultValue={trip?.name ?? ''}
                     className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
+                {errors && errors.trip_name?.map((error, index) => (
+                    <ErrorMessage index={'trip_name'+index} error={error} />
+                ))}
             </div>
 
             <div className="flex gap-2">
@@ -32,6 +38,9 @@ export default function TripFields({ trip }: TripFieldsProps) {
                         defaultValue={trip?.start_date ?? ''}
                         className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
+                    {errors && errors.start_date?.map((error, index) => (
+                        <ErrorMessage index={'start_date'+index} error={error} />
+                    ))}
                 </div>
 
                 <div className="w-1/2">
@@ -60,6 +69,9 @@ export default function TripFields({ trip }: TripFieldsProps) {
                         defaultValue={trip?.end_date ?? ''}
                         className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
+                    {errors && errors.end_date?.map((error, index) => (
+                        <ErrorMessage index={'end_date'+index} error={error} />
+                    ))}
                 </div>
 
                 <div className="w-1/2">
