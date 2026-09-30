@@ -2,7 +2,7 @@
 
 import NavLinks from '@/app/ui/dashboard/nav-links';
 import AcmeLogo from '@/app/ui/acme-logo';
-import { PowerIcon, MapIcon, PlusIcon, Bars3Icon } from '@heroicons/react/24/outline';
+import { PowerIcon, MapIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import AddTrip from '../components/trips/AddTrip';
 
 type SideNavProps = {
@@ -14,7 +14,6 @@ export default function SideNav({
   isOpen,
   setIsOpen
 }: SideNavProps) {
-
   return (
     <div className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col text-gray-300
     bg-gray-800 px-3 py-4 shadow-lg ${
@@ -45,8 +44,8 @@ export default function SideNav({
         <NavLinks />
         <AddTrip />
         <div className="h-auto w-full grow rounded-md block"></div>
-        <form>
-          <button className="flex h-[48px] w-full grow items-center gap-2 rounded-md text-sm font-medium hover:bg-gray-500 flex-none justify-start p-2 px-3">
+        <form action="/auth/signout" method="POST">
+          <button type="submit" className="flex h-[48px] w-full grow items-center gap-2 rounded-md text-sm font-medium hover:bg-gray-500 flex-none justify-start p-2 px-3">
             <PowerIcon className="w-6" />
             <div className="block">Sign Out</div>
           </button>

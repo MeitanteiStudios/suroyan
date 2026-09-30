@@ -2,13 +2,29 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { getRoutes, optimizeTrip } from '../maps/actions';
-import { marker } from 'leaflet';
 import { FormErrors } from '@/app/ui/components/trips/AddTrip';
 
-const user_id = '550e8400-e29b-41d4-a716-446655440000';
+async function getContext() {
+    const supabase = await createClient();
+
+    const {
+        data: { user },
+        error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+        throw new Error('You must be logged in.');
+    }
+
+    return {
+        supabase,
+        user,
+        user_id: user.id,
+    };
+}
 
 export async function createTrip(formData: FormData) {
-    const supabase = await createClient();
+    const { supabase, user_id } = await getContext();
 
     try {
         const tripErrors = validateTripForm(formData);
@@ -26,16 +42,6 @@ export async function createTrip(formData: FormData) {
             };
         }
         const data = Object.fromEntries(formData);
-
-        // throw new Error('Test Error');
-        // Get currently logged-in user
-        // const {
-        //     data: { user },
-        // } = await supabase.auth.getUser();
-
-        // if (!user) {
-        //     throw new Error('You must be logged in.');
-        // }
 
         // PUT THE FOREIGN KEY BACK
         const { data: trip, error } = await supabase
@@ -123,7 +129,7 @@ export async function createTrip(formData: FormData) {
 }
 
 export async function updateTrip(formData: FormData) {
-    const supabase = await createClient();
+    const { supabase, user_id } = await getContext();
 
     try {
         const errors = validateTripForm(formData);
@@ -291,15 +297,7 @@ export async function updateTrip(formData: FormData) {
 }
 
 export async function getTrips() {
-    const supabase = await createClient();
-
-    // const {
-    //     data: { user },
-    // } = await supabase.auth.getUser();
-
-    // if (!user) {
-    //     throw new Error('User is not authenticated');
-    // }
+    const { supabase, user_id } = await getContext();
 
     const { data, error } = await supabase
         .from('trips')
@@ -315,7 +313,7 @@ export async function getTrips() {
 }
 
 export async function getTrip(tripId: string) {
-    const supabase = await createClient();
+    const { supabase, user_id } = await getContext();
 
     const { data: trip, error: tripError } = await supabase
         .from('trips')
@@ -428,7 +426,7 @@ export async function getDayNumber (date: string, tripStartDate: string) {
 
 
 export async function getPlaces(tripId: string, day?: number): Promise<any[]> {
-    const supabase = await createClient();
+    const { supabase, user_id } = await getContext();
 
     let query = supabase
         .from('trip_places')
@@ -450,7 +448,7 @@ export async function getPlaces(tripId: string, day?: number): Promise<any[]> {
 }
 
 export async function getAccomodations(tripId: string) {
-    const supabase = await createClient();
+    const { supabase, user_id } = await getContext();
 
     const { data: accomodations, error: error } =
             await supabase
@@ -466,7 +464,7 @@ export async function getAccomodations(tripId: string) {
 }
 
 export async function addPlaces(formData: FormData) {
-    const supabase = await createClient();
+    const { supabase, user_id } = await getContext();
 
     try {
         const errors = validatePlaces(formData);
@@ -565,7 +563,7 @@ export async function savePlaces(
     tripId: string,
     placeIds: Record<string, (string | number)[]>
 ) {
-    const supabase = await createClient();
+    const { supabase, user_id } = await getContext();
 
     // Verify trip belongs to the current user
     const { data: trip, error: tripError } = await supabase
@@ -768,7 +766,7 @@ export async function savePlaces(
 
 
 export async function deletePlace(placeId: String) {
-    const supabase = await createClient();
+    const { supabase, user_id } = await getContext();
 
     const { data: place, error: placeError } = await supabase
         .from('trip_places')

@@ -40,7 +40,7 @@ export default function RegisterPage() {
 
         // If email confirmation is enabled in Supabase
         if (data.user && !data.session) {
-            router.push('/login');
+            router.push('/dashboard');
             setLoading(false);
             return;
         }

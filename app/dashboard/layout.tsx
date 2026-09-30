@@ -6,7 +6,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   TooltipInitializer();
   
   return (
-    <div>
+    <div className="bg-gray-900">
       {children}
     </div>
   );
