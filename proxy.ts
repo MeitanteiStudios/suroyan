@@ -35,6 +35,11 @@ export async function proxy(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser();
 
+    if (request.nextUrl.pathname === '/') {
+        return NextResponse.redirect(
+            new URL('/dashboard', request.url)
+        );
+    }
 
     const isDashboard = request.nextUrl.pathname.startsWith('/dashboard');
     if (isDashboard && !user) {
@@ -57,6 +62,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
     matcher: [
+        '/',
         '/dashboard/:path*',
         '/login',
         '/register',
