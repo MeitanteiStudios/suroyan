@@ -105,7 +105,7 @@ export default function AddTrip() {
                 >
                     {/* Scrollable content */}
                     <div className="min-h-0 flex-1 overflow-auto">
-                        <div className="flex gap-8 mt-8">
+                        <div className="flex flex-col md:flex-row gap-8 mt-8">
                             <div className="w-1/2 flex flex-col gap-4">
                                 <TripFields trip={null} errors={errors} />
                                 <AccomodationFields accoms={null} errors={errors} />
